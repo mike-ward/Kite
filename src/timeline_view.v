@@ -17,16 +17,19 @@ fn update_timeline(mut app App) {
 
 	mut feed := []ui.Widget{}
 	for f in timeline.feed {
-		created := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
-		local := created.utc_to_local().relative()
+		author := f.post.author
+		name := if author.display_name.len > 0 { author.display_name } else { author.handle }
 
-		author := ui.label(text: '${f.post.author.display_name} ∙ ${local}')
+		created := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
+		relative := created.utc_to_local().relative()
+
+		header := ui.label(text: '${name} ∙ ${relative}')
 		content := ui.label(text: '${f.post.record.text.wrap(width: 45)}')
 		divider := ui.label(text: ' ')
 
 		post := ui.column(
 			children: [
-				author,
+				header,
 				content,
 				divider,
 			]

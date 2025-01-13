@@ -21,6 +21,7 @@ pub:
 
 pub struct Author {
 pub:
+	handle       string
 	display_name string @[json: 'displayName']
 }
 

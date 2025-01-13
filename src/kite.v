@@ -1,48 +1,35 @@
 import atprotocol
-import time
 import ui
 
 @[heap]
 struct App {
 mut:
-	window  &ui.Window = unsafe { nil }
-	session atprotocol.Session
+	window        &ui.Window = unsafe { nil }
+	session       atprotocol.Session
+	login_view    &ui.Widget = unsafe { nil }
+	timeline_view &ui.Widget = unsafe { nil }
+	timeline_text string
 }
 
 fn main() {
 	mut app := &App{}
-	settings := load_settings()
+	// settings := load_settings()
 
-	view := match settings.is_valid() {
-		true { timeline_view(app) }
-		else { login_view(mut app) }
-	}
+	app.login_view = create_login_view(mut app)
+	app.timeline_view = create_timeline_view(mut app)
 
 	app.window = ui.window(
-		height:   1000
+		height:   900
 		width:    300
 		title:    'Kite'
-		children: [view]
+		children: [
+			ui.column(
+				id:       'kite'
+				heights:  [ui.compact, ui.stretch]
+				children: [app.login_view, app.timeline_view]
+			),
+		]
 	)
 
 	ui.run(app.window)
-}
-
-fn (mut app App) login(b &ui.Button) {
-	if mut label := app.window.get[ui.TextBox]('timeline') {
-		app.session = atprotocol.create_session('mike@wardfam.org', 'Tilt-Vendetta-Evident9') or {
-			label.set_text(err.str())
-			return
-		}
-		timeline := app.session.get_timeline() or { atprotocol.Timeline{} }
-
-		mut output := ''
-		for f in timeline.feed {
-			created := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
-			output += '\n${f.post.author.display_name} ∙ ${created.utc_to_local().relative()}'
-			output += '\n${f.post.record.text}\n'
-			output += '.................................\n'
-		}
-		label.set_text(output)
-	}
 }

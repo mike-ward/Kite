@@ -1,3 +1,4 @@
+import atprotocol
 import json
 import os
 import ui
@@ -6,15 +7,12 @@ const settings_file = '.kite.json'
 
 pub struct Settings {
 pub:
-	handle          string
-	email           string
-	email_confirmed bool
-	access_jwt      string
-	refresh_jwt     string
+	session atprotocol.Session
 }
 
 fn (s Settings) is_valid() bool {
-	return s.handle.len > 0 && s.email.len > 0 && s.access_jwt.len > 0 && s.refresh_jwt.len > 0
+	return s.session.handle.len > 0 && s.session.email.len > 0 && s.session.access_jwt.len > 0
+		&& s.session.refresh_jwt.len > 0
 }
 
 fn load_settings() Settings {

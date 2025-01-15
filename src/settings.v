@@ -7,6 +7,8 @@ const settings_file = '.kite.json'
 
 pub struct Settings {
 pub:
+	width   int = 300
+	height  int = 900
 	session atprotocol.Session
 }
 

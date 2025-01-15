@@ -32,7 +32,9 @@ fn create_login_view(mut app App) &ui.Widget {
 				children: [
 					ui.button(
 						text:     'Login'
-						on_click: app.btn_login
+						on_click: fn [mut app, login] (_ &ui.Button) {
+							app.login(login)
+						}
 					),
 				]
 			),
@@ -40,14 +42,20 @@ fn create_login_view(mut app App) &ui.Widget {
 	)
 }
 
-fn (mut app App) btn_login(b &ui.Button) {
-	app.session = atprotocol.create_session('mike@wardfam.org', 'Tilt-Vendetta-Evident9') or {
+fn (mut app App) login(login Login) {
+	app.session = atprotocol.create_session(login.name, login.password) or {
 		ui.message_box(err.str())
 		return
 	}
-	if mut c := app.window.get[ui.Stack]('kite') {
-		c.remove(at: 0)
+
+	if mut stack := app.window.get[ui.Stack]('kite') {
+		stack.remove(at: 0)
 	}
 
+	settings := Settings{
+		session: app.session
+	}
+
+	save_settings(settings)
 	spawn start_timeline(mut app)
 }

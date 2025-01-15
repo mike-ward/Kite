@@ -1,3 +1,4 @@
+import arrays
 import atprotocol
 import time
 import ui
@@ -5,9 +6,7 @@ import ui
 fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
 		id:         'timeline'
-		margin:     ui.Margin{
-			left: 5
-		}
+		stretch:    true
 		scrollview: true
 	)
 }
@@ -21,17 +20,18 @@ fn update_timeline(mut app App) {
 		name := if author.display_name.len > 0 { author.display_name } else { author.handle }
 
 		created := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
-		relative := created.utc_to_local().relative()
+		relative_time := created.utc_to_local().relative_short()
+			.replace(' ago', '')
+			.replace('0m', '<1m')
 
-		header := ui.label(text: '${name} ∙ ${relative}')
-		content := ui.label(text: '${f.post.record.text.wrap(width: 45)}')
-		divider := ui.label(text: ' ')
+		header := ui.label(text: '${name} ∙ ${relative_time}')
+		text := truncate_long_words(f.post.record.text)
+		content := ui.label(text: text.wrap(width: 45))
 
 		post := ui.column(
 			children: [
 				header,
 				content,
-				divider,
 			]
 		)
 		feed << post
@@ -42,6 +42,15 @@ fn update_timeline(mut app App) {
 		}
 		tl.add(children: feed)
 	}
+}
+
+fn truncate_long_words(s string) string {
+	return arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
+		return match true {
+			elem.len > 35 { elem[..20] + '...' }
+			else { elem }
+		}
+	})
 }
 
 fn start_timeline(mut app App) {

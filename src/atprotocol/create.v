@@ -20,6 +20,6 @@ pub fn create_session(identifier string, password string) !Session {
 
 	return match response.status() {
 		.ok { json.decode(Session, response.body) }
-		else { error(response.str()) }
+		else { error(response.body) }
 	}
 }

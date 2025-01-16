@@ -28,7 +28,7 @@ fn main() {
 		height:   settings.height
 		width:    settings.width
 		title:    'Kite'
-		bg_color: gx.rgb(0xee, 0xe9, 0xe9)
+		bg_color: gx.rgb(0xd6, 0xea, 0xf8)
 		children: [
 			ui.column(
 				id:       main_id
@@ -50,6 +50,11 @@ fn main() {
 				spawn start_timeline(mut app)
 			}
 		}
+	)
+
+	app.window.add_style(
+		id:    'header'
+		color: gx.dark_blue
 	)
 
 	ui.run(app.window)

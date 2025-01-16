@@ -12,7 +12,10 @@ fn create_timeline_view(mut app App) &ui.Widget {
 }
 
 fn update_timeline(mut app App) {
-	timeline := app.session.get_timeline() or { atprotocol.Timeline{} }
+	timeline := app.session.get_timeline() or {
+		save_settings(Settings{})
+		error_timeline(err.msg())
+	}
 
 	mut feed := []ui.Widget{}
 	for f in timeline.feed {
@@ -20,11 +23,10 @@ fn update_timeline(mut app App) {
 		name := if author.display_name.len > 0 { author.display_name } else { author.handle }
 
 		created := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
-		relative_time := created.utc_to_local().relative_short()
-			.replace(' ago', '')
-			.replace('0m', '<1m')
+		relative_time := created.utc_to_local().relative_short().replace(' ago', '')
+		short_time := if relative_time == '0m' { '<1m' } else { relative_time }
 
-		header := ui.label(text: '${name} ∙ ${relative_time}')
+		header := ui.label(text: '${name} ∙ ${short_time}', style: 'header')
 		text := truncate_long_words(f.post.record.text)
 		content := ui.label(text: text.wrap(width: 45))
 
@@ -32,6 +34,7 @@ fn update_timeline(mut app App) {
 			children: [
 				header,
 				content,
+				ui.label(text: ''),
 			]
 		)
 		feed << post
@@ -57,5 +60,24 @@ fn start_timeline(mut app App) {
 	for {
 		update_timeline(mut app)
 		time.sleep(time.minute)
+	}
+}
+
+fn error_timeline(s string) atprotocol.Timeline {
+	return atprotocol.Timeline{
+		feed: [
+			atprotocol.Feed{
+				post: atprotocol.Post{
+					author: atprotocol.Author{
+						handle:       'kite'
+						display_name: 'kite error message'
+					}
+					record: atprotocol.Record{
+						text:       s
+						created_at: time.now().format_rfc3339()
+					}
+				}
+			},
+		]
 	}
 }

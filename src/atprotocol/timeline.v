@@ -40,5 +40,10 @@ pub fn (session Session) get_timeline() !Timeline {
 			value: 'Bearer ${session.access_jwt}'
 		)
 	)!
+
+	if response.status() != .ok {
+		return error(response.body)
+	}
+
 	return json.decode(Timeline, response.body)
 }

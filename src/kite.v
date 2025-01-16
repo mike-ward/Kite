@@ -52,10 +52,5 @@ fn main() {
 		}
 	)
 
-	app.window.add_style(
-		id:    'header'
-		color: gx.dark_blue
-	)
-
 	ui.run(app.window)
 }

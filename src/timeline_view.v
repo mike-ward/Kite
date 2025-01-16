@@ -1,12 +1,12 @@
 import arrays
 import atprotocol
+import gx
 import time
 import ui
 
 fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
 		id:         'timeline'
-		stretch:    true
 		scrollview: true
 	)
 }
@@ -25,15 +25,15 @@ fn update_timeline(mut app App) {
 		created := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
 		relative_time := created.utc_to_local().relative_short().replace(' ago', '')
 		short_time := if relative_time == '0m' { '<1m' } else { relative_time }
-
-		header := ui.label(text: '${name} ∙ ${short_time}', style: 'header')
-		text := truncate_long_words(f.post.record.text)
-		content := ui.label(text: text.wrap(width: 45))
+		content := truncate_long_words(f.post.record.text).wrap(width: 45)
 
 		post := ui.column(
 			children: [
-				header,
-				content,
+				ui.label(
+					text:       '• ${name} ∙ ${short_time}'
+					text_color: gx.rgb(0x19, 0x19, 0x70)
+				),
+				ui.label(text: content),
 				ui.label(text: ''),
 			]
 		)

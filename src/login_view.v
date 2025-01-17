@@ -43,19 +43,35 @@ fn create_login_view(mut app App) &ui.Widget {
 }
 
 fn (mut app App) login(login Login) {
-	app.session = atprotocol.create_session(login.name, login.password) or {
+	session := atprotocol.create_session(login.name, login.password) or {
 		ui.message_box(err.str())
 		return
 	}
-
 	if mut stack := app.window.get[ui.Stack]('kite') {
 		stack.remove(at: 0)
 	}
-
-	settings := Settings{
-		session: app.session
+	app.settings = Settings{
+		...app.settings
+		session: session
 	}
-
-	save_settings(settings)
+	save_settings(app.settings)
 	spawn start_timeline(mut app)
+}
+
+fn refresh_session(mut app App) {
+	if mut refresh := atprotocol.refresh_session(app.settings.session) {
+		app.settings = Settings{
+			...app.settings
+			session: atprotocol.Session{
+				...app.settings.session
+				access_jwt:  refresh.access_jwt
+				refresh_jwt: refresh.refresh_jwt
+			}
+		}
+		save_settings(app.settings)
+		println('refresh session succeeded')
+	} else {
+		save_settings(Settings{})
+		eprintln(err.msg())
+	}
 }

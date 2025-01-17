@@ -7,7 +7,7 @@ struct RefreshSession {
 pub:
 	access_jwt  string @[json: 'accessJwt']
 	refresh_jwt string @[json: 'refreshJwt']
-	active      string
+	active      bool
 }
 
 pub fn refresh_session(session Session) !RefreshSession {
@@ -20,5 +20,8 @@ pub fn refresh_session(session Session) !RefreshSession {
 		)
 	) or { return error('failed to create header') }
 
-	return json.decode(RefreshSession, response.body)!
+	return match response.status() {
+		.ok { json.decode(RefreshSession, response.body)! }
+		else { error(response.body) }
+	}
 }

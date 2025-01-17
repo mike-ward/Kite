@@ -1,38 +1,35 @@
-import atprotocol
 import ui
 import gx
 
-const main_id = 'kite'
+const id_main_column = 'main-column'
 
 @[heap]
 struct App {
 mut:
-	session       atprotocol.Session
 	window        &ui.Window = unsafe { nil }
-	login_view    &ui.Widget = unsafe { nil }
-	timeline_view &ui.Widget = unsafe { nil }
+	settings      Settings
 	refresh_count int
 }
 
 fn main() {
 	mut app := &App{}
-	settings := load_settings()
+	app.settings = load_settings()
 
-	app.login_view = create_login_view(mut app)
-	app.timeline_view = create_timeline_view(mut app)
-
-	if settings.session.access_jwt.len != 0 {
-		app.session = settings.session
+	if app.settings.session.access_jwt.len > 0 {
+		refresh_session(mut app)
 	}
 
+	login_view := create_login_view(mut app)
+	timeline_view := create_timeline_view(mut app)
+
 	app.window = ui.window(
-		height:   settings.height
-		width:    settings.width
+		height:   app.settings.height
+		width:    app.settings.width
 		title:    'Kite'
 		bg_color: gx.rgb(0xd6, 0xea, 0xf8)
 		children: [
 			ui.column(
-				id:       main_id
+				id:       id_main_column
 				margin:   ui.Margin{
 					top:    1
 					left:   3
@@ -40,12 +37,13 @@ fn main() {
 					right:  1
 				}
 				heights:  [ui.stretch, ui.stretch]
-				children: [app.login_view, app.timeline_view]
+				children: [login_view, timeline_view]
 			),
 		]
 		on_init:  fn [mut app] (window &ui.Window) {
-			if app.session.access_jwt.len > 0 {
-				if mut stack := window.get[ui.Stack](main_id) {
+			if mut stack := window.get[ui.Stack](id_main_column) {
+				if app.settings.session.access_jwt.len > 0 {
+					// remove login_view
 					stack.remove(at: 0)
 				}
 				spawn start_timeline(mut app)

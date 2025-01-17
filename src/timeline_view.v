@@ -31,6 +31,8 @@ fn update_timeline(mut app App) {
 	}
 
 	mut widgets := []ui.Widget{}
+	widgets << ui.rectangle(height: 1) // spacer
+
 	for f in timeline.feed {
 		handle := f.post.author.handle
 		name := f.post.author.display_name
@@ -41,8 +43,7 @@ fn update_timeline(mut app App) {
 		post_time := if short_time == '0m' { '<1m' } else { short_time }
 
 		header := '• ${author} ∙ ${post_time}'
-		content := truncate_long_words(f.post.record.text).wrap(width: 45)
-
+		content := truncate_long_words(f.post.record.text).wrap(width: 45).trim_space()
 		widgets << ui.column(
 			children: [
 				ui.label(
@@ -50,7 +51,8 @@ fn update_timeline(mut app App) {
 					text_color: gx.rgb(0x19, 0x19, 0x70)
 				),
 				ui.label(text: content),
-				ui.label(text: ''),
+				ui.rectangle(height: 5), // spacer
+				ui.rectangle(border: true),
 			]
 		)
 	}

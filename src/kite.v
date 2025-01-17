@@ -26,15 +26,13 @@ fn main() {
 		height:   app.settings.height
 		width:    app.settings.width
 		title:    'Kite'
-		bg_color: gx.rgb(0xd6, 0xea, 0xf8)
+		bg_color: gx.rgb(0xf9, 0xf9, 0xf9)
 		children: [
 			ui.column(
 				id:       id_main_column
 				margin:   ui.Margin{
-					top:    1
 					left:   3
 					bottom: 1
-					right:  1
 				}
 				heights:  [ui.stretch, ui.stretch]
 				children: [login_view, timeline_view]

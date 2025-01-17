@@ -1,6 +1,5 @@
 import arrays
 import atprotocol
-import gx
 import time
 import ui
 
@@ -35,15 +34,15 @@ fn update_timeline(mut app App) {
 
 	for f in timeline.feed {
 		handle := f.post.author.handle
-		name := f.post.author.display_name
-		author := if name.len > 0 { name } else { handle }
+		d_name := f.post.author.display_name
+		author := if d_name.len > 0 { d_name } else { handle }
 
-		created := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
-		short_time := created.utc_to_local().relative_short().replace(' ago', '')
-		post_time := if short_time == '0m' { '<1m' } else { short_time }
+		created_at := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
+		time_short := created_at.utc_to_local().relative_short().replace(' ago', '')
+		time_stamp := if time_short == '0m' { '<1m' } else { time_short }
 
-		head := '• ${author} ∙ ${post_time}'
-		body := truncate_long_words(f.post.record.text)
+		head := '• ${author} ∙ ${time_stamp}'
+		body := truncate_long_fields(f.post.record.text)
 			.wrap(width: 45)
 			.trim_space()
 
@@ -84,7 +83,7 @@ fn error_timeline(s string) atprotocol.Timeline {
 	}
 }
 
-fn truncate_long_words(s string) string {
+fn truncate_long_fields(s string) string {
 	return arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
 		return match true {
 			elem.len > 35 { elem[..20] + '...' }

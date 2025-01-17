@@ -11,6 +11,7 @@ mut:
 	window        &ui.Window = unsafe { nil }
 	login_view    &ui.Widget = unsafe { nil }
 	timeline_view &ui.Widget = unsafe { nil }
+	refresh_count int
 }
 
 fn main() {

@@ -4,9 +4,11 @@ import gx
 import time
 import ui
 
+const id_timeline = 'timeline'
+
 fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
-		id:         'timeline'
+		id:         id_timeline
 		scrollview: true
 	)
 }
@@ -27,7 +29,7 @@ fn update_timeline(mut app App) {
 		short_time := if relative_time == '0m' { '<1m' } else { relative_time }
 		content := truncate_long_words(f.post.record.text).wrap(width: 45)
 
-		post := ui.column(
+		feed << ui.column(
 			children: [
 				ui.label(
 					text:       '• ${name} ∙ ${short_time}'
@@ -37,9 +39,8 @@ fn update_timeline(mut app App) {
 				ui.label(text: ''),
 			]
 		)
-		feed << post
 	}
-	if mut tl := app.window.get[ui.Stack]('timeline') {
+	if mut tl := app.window.get[ui.Stack](id_timeline) {
 		for tl.children.len > 0 {
 			tl.remove()
 		}
@@ -59,6 +60,19 @@ fn truncate_long_words(s string) string {
 fn start_timeline(mut app App) {
 	for {
 		update_timeline(mut app)
+		if app.refresh_count % 10 == 0 {
+			// Refresh the session every 10 minutes
+			if mut refresh := atprotocol.refresh_session(app.session) {
+				app.session = atprotocol.Session{
+					...app.session
+					access_jwt:  refresh.access_jwt
+					refresh_jwt: refresh.refresh_jwt
+				}
+				save_settings(Settings{ session: app.session })
+			}
+			println('refreshed session')
+		}
+		app.refresh_count += 1
 		time.sleep(time.minute)
 	}
 }
@@ -69,7 +83,7 @@ fn error_timeline(s string) atprotocol.Timeline {
 			atprotocol.Feed{
 				post: atprotocol.Post{
 					author: atprotocol.Author{
-						handle:       'kite'
+						handle:       'kite error'
 						display_name: 'kite error message'
 					}
 					record: atprotocol.Record{

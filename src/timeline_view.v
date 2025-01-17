@@ -42,15 +42,15 @@ fn update_timeline(mut app App) {
 		short_time := created.utc_to_local().relative_short().replace(' ago', '')
 		post_time := if short_time == '0m' { '<1m' } else { short_time }
 
-		header := '• ${author} ∙ ${post_time}'
-		content := truncate_long_words(f.post.record.text).wrap(width: 45).trim_space()
+		head := '• ${author} ∙ ${post_time}'
+		body := truncate_long_words(f.post.record.text)
+			.wrap(width: 45)
+			.trim_space()
+
 		widgets << ui.column(
 			children: [
-				ui.label(
-					text:       header
-					text_color: gx.rgb(0x19, 0x19, 0x70)
-				),
-				ui.label(text: content),
+				ui.label(text: head),
+				ui.label(text: body),
 				ui.rectangle(height: 5), // spacer
 				ui.rectangle(border: true),
 			]

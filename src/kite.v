@@ -6,9 +6,9 @@ const id_main_column = 'main-column'
 @[heap]
 struct App {
 mut:
-	window        &ui.Window = unsafe { nil }
-	settings      Settings
-	refresh_count int
+	window                &ui.Window = unsafe { nil }
+	settings              Settings
+	refresh_session_count int
 }
 
 fn main() {

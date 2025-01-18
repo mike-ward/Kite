@@ -39,15 +39,18 @@ fn main() {
 			),
 		]
 		on_init:  fn [mut app] (window &ui.Window) {
-			if mut stack := window.get[ui.Stack](id_main_column) {
-				if app.settings.session.access_jwt.len > 0 {
-					// remove login_view
-					stack.remove(at: 0)
-				}
-				spawn start_timeline(mut app)
-			}
+			remove_login_view(mut app)
+			spawn start_timeline(mut app)
 		}
 	)
 
 	ui.run(app.window)
+}
+
+fn remove_login_view(mut app App) {
+	if mut stack := app.window.get[ui.Stack](id_main_column) {
+		if stack.children.len > 1 {
+			stack.remove(at: 0)
+		}
+	}
 }

@@ -47,14 +47,12 @@ fn (mut app App) login(login Login) {
 		ui.message_box(err.str())
 		return
 	}
-	if mut stack := app.window.get[ui.Stack]('kite') {
-		stack.remove(at: 0)
-	}
 	app.settings = Settings{
 		...app.settings
 		session: session
 	}
 	save_settings(app.settings)
+	remove_login_view(mut app)
 	spawn start_timeline(mut app)
 }
 

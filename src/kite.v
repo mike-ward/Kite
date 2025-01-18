@@ -39,7 +39,7 @@ fn main() {
 			),
 		]
 		on_init:  fn [mut app] (window &ui.Window) {
-			if app.settings.session.access_jwt.len > 0 {
+			if app.settings.is_valid() {
 				remove_login_view(mut app)
 				spawn start_timeline(mut app)
 			}

@@ -10,7 +10,8 @@ pub:
 
 pub struct Feed {
 pub:
-	post Post
+	post   Post
+	reason Reason
 }
 
 pub struct Post {
@@ -29,6 +30,18 @@ pub struct Record {
 pub:
 	text       string @[json: 'text']
 	created_at string @[json: 'createdAt']
+}
+
+pub struct Reason {
+pub:
+	rtype string @[json: '\$type']
+	by    By
+}
+
+pub struct By {
+pub:
+	handle       string
+	display_name string @[json: 'displayName']
 }
 
 pub fn (session Session) get_timeline() !Timeline {

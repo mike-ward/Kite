@@ -39,25 +39,51 @@ fn update_timeline(mut app App) {
 		author := if d_name.len > 0 { d_name } else { handle }
 
 		created_at := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
-		time_stamp := created_at
+		time_short := created_at
 			.utc_to_local()
 			.relative_short()
 			.fields()[0]
-			.replace('0m', '<1m')
+		time_stamp := if time_short == '0m' { '<1m' } else { time_short }
+
+		repost := if f.reason.rtype.contains('Repost') {
+			match f.reason.by.display_name.len > 0 {
+				true { '> reposted by ${f.reason.by.display_name}' }
+				else { '> reposted by ${f.reason.by.handle}' }
+			}
+		} else {
+			''
+		}
 
 		head := '• ${author} ∙ ${time_stamp}'
 		body := truncate_long_fields(f.post.record.text)
 			.wrap(width: 45)
 			.trim_space()
 
-		widgets << ui.column(
-			children: [
-				ui.label(text: head),
-				ui.label(text: body),
-				ui.rectangle(height: 5), // spacer
-				ui.rectangle(border: true),
-			]
-		)
+		mut post := match repost.len > 0 {
+			true {
+				ui.column(
+					children: [
+						ui.label(text: repost, text_size: 13),
+						ui.label(text: head),
+						ui.label(text: body),
+						ui.rectangle(height: 5), // spacer
+						ui.rectangle(border: true),
+					]
+				)
+			}
+			else {
+				ui.column(
+					children: [
+						ui.label(text: head),
+						ui.label(text: body),
+						ui.rectangle(height: 5), // spacer
+						ui.rectangle(border: true),
+					]
+				)
+			}
+		}
+
+		widgets << post
 	}
 
 	if mut tl := app.window.get[ui.Stack](id_timeline) {

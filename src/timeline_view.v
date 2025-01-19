@@ -1,12 +1,14 @@
 import arrays
 import atprotocol
-import io.util
+import hash
 import net.http
 import os
 import time
 import ui
 
 const id_timeline = 'timeline'
+const error_title = 'kite error'
+const temp_prefix = 'kite_image_'
 
 fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
@@ -35,8 +37,7 @@ fn update_timeline(mut app App) {
 }
 
 fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
-	tmp_dir := util.temp_dir() or { '.' }
-	tmp_file := os.join_path_single(tmp_dir, 'image.tmp')
+	tmp_dir := os.temp_dir()
 
 	mut widgets := []ui.Widget{}
 	widgets << ui.rectangle(height: 1) // spacer
@@ -75,7 +76,11 @@ fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
 
 		if f.post.embed.etype.contains('#view') {
 			if f.post.embed.external.thumb.len > 0 {
-				http.download_file(f.post.embed.external.thumb, tmp_file) or {}
+				hash_name := hash.sum64_string(f.post.embed.external.thumb, 0).str()
+				tmp_file := os.join_path_single(tmp_dir, '${temp_prefix}_${hash_name}')
+				if !os.exists(tmp_file) {
+					http.download_file(f.post.embed.external.thumb, tmp_file) or {}
+				}
 				if mut app.window.ui.dd is ui.DrawDeviceContext {
 					image := app.window.ui.dd.create_image(tmp_file) or {
 						app.window.ui.img('v-logo')
@@ -113,8 +118,8 @@ fn error_timeline(s string) atprotocol.Timeline {
 			atprotocol.Feed{
 				post: atprotocol.Post{
 					author: atprotocol.Author{
-						handle:       'kite error'
-						display_name: 'kite error'
+						handle:       error_title
+						display_name: error_title
 					}
 					record: atprotocol.Record{
 						text:       s

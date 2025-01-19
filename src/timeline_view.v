@@ -1,5 +1,8 @@
 import arrays
 import atprotocol
+import io.util
+import net.http
+import os
 import time
 import ui
 
@@ -8,7 +11,6 @@ const id_timeline = 'timeline'
 fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
 		id:         id_timeline
-		width:      100
 		scrollview: true
 	)
 }
@@ -29,11 +31,29 @@ fn update_timeline(mut app App) {
 		save_settings(Settings{})
 		error_timeline(err.msg())
 	}
+	ui_timeline(timeline, mut app)
+}
+
+fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
+	tmp_dir := util.temp_dir() or { '.' }
+	tmp_file := os.join_path_single(tmp_dir, 'image.tmp')
 
 	mut widgets := []ui.Widget{}
 	widgets << ui.rectangle(height: 1) // spacer
 
 	for f in timeline.feed {
+		mut post := []ui.Widget{}
+
+		if f.reason.rtype.contains('Repost') {
+			by := if f.reason.by.display_name.len > 0 {
+				f.reason.by.display_name
+			} else {
+				f.reason.by.handle
+			}
+			repost := '> reposted by ${by}'
+			post << ui.label(text: repost, text_size: 13)
+		}
+
 		handle := f.post.author.handle
 		d_name := f.post.author.display_name
 		author := if d_name.len > 0 { d_name } else { handle }
@@ -45,45 +65,38 @@ fn update_timeline(mut app App) {
 			.fields()[0]
 		time_stamp := if time_short == '0m' { '<1m' } else { time_short }
 
-		repost := if f.reason.rtype.contains('Repost') {
-			match f.reason.by.display_name.len > 0 {
-				true { '> reposted by ${f.reason.by.display_name}' }
-				else { '> reposted by ${f.reason.by.handle}' }
-			}
-		} else {
-			''
-		}
-
 		head := '• ${author} ∙ ${time_stamp}'
 		body := truncate_long_fields(f.post.record.text)
 			.wrap(width: 45)
 			.trim_space()
 
-		mut post := match repost.len > 0 {
-			true {
-				ui.column(
-					children: [
-						ui.label(text: repost, text_size: 13),
-						ui.label(text: head),
-						ui.label(text: body),
-						ui.rectangle(height: 5), // spacer
-						ui.rectangle(border: true),
-					]
-				)
-			}
-			else {
-				ui.column(
-					children: [
-						ui.label(text: head),
-						ui.label(text: body),
-						ui.rectangle(height: 5), // spacer
-						ui.rectangle(border: true),
-					]
-				)
+		post << ui.label(text: head)
+		post << ui.label(text: body)
+
+		if f.post.embed.etype.contains('#view') {
+			if f.post.embed.external.thumb.len > 0 {
+				http.download_file(f.post.embed.external.thumb, tmp_file) or {}
+				if mut app.window.ui.dd is ui.DrawDeviceContext {
+					image := app.window.ui.dd.create_image(tmp_file) or {
+						app.window.ui.img('v-logo')
+					}
+					post << ui.column(
+						alignment: .center
+						children:  [
+							ui.picture(
+								image:  image
+								width:  200
+								height: 125
+							),
+						]
+					)
+				}
 			}
 		}
 
-		widgets << post
+		post << ui.rectangle(height: 5)
+		post << ui.rectangle(border: true)
+		widgets << ui.column(children: post)
 	}
 
 	if mut tl := app.window.get[ui.Stack](id_timeline) {
@@ -94,23 +107,6 @@ fn update_timeline(mut app App) {
 	}
 }
 
-// fn post_chunk(text string) &ui.ChunkView {
-// 	mut text_chunks := []ui.ChunkContent{}
-// 	mut line := ''
-// 	for field in text.fields() {
-// 		if line.len + field.len > 45 {
-// 			text_chunks << ui.textchunk(text: line)
-// 			line = field
-// 		}
-// 		line += field + ' '
-// 	}
-// 	return ui.chunkview(
-// 		chunks: [
-// 			ui.rowchunk(chunks: text_chunks),
-// 		]
-// 	)
-// }
-
 fn error_timeline(s string) atprotocol.Timeline {
 	return atprotocol.Timeline{
 		feed: [
@@ -118,7 +114,7 @@ fn error_timeline(s string) atprotocol.Timeline {
 				post: atprotocol.Post{
 					author: atprotocol.Author{
 						handle:       'kite error'
-						display_name: 'kite error message'
+						display_name: 'kite error'
 					}
 					record: atprotocol.Record{
 						text:       s

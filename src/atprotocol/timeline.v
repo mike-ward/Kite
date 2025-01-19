@@ -18,6 +18,7 @@ pub struct Post {
 pub:
 	author Author
 	record Record
+	embed  Embed
 }
 
 pub struct Author {
@@ -28,6 +29,7 @@ pub:
 
 pub struct Record {
 pub:
+	rtype      string @[json: '\$type']
 	text       string @[json: 'text']
 	created_at string @[json: 'createdAt']
 }
@@ -42,6 +44,20 @@ pub struct By {
 pub:
 	handle       string
 	display_name string @[json: 'displayName']
+}
+
+pub struct Embed {
+pub:
+	etype    string @[json: '\$type']
+	external External
+}
+
+pub struct External {
+pub:
+	uri         string
+	title       string
+	description string
+	thumb       string
 }
 
 pub fn (session Session) get_timeline() !Timeline {

@@ -1,5 +1,6 @@
 import arrays
 import atprotocol
+import gg
 import hash
 import net.http
 import os
@@ -37,66 +38,24 @@ fn update_timeline(mut app App) {
 }
 
 fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
-	tmp_dir := os.temp_dir()
-
 	mut widgets := []ui.Widget{}
 	widgets << ui.rectangle(height: 1) // spacer
 
 	for f in timeline.feed {
-		mut post := []ui.Widget{}
+		mut post := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
-		if f.reason.rtype.contains('Repost') {
-			by := if f.reason.by.display_name.len > 0 {
-				f.reason.by.display_name
-			} else {
-				f.reason.by.handle
-			}
-			repost := '> reposted by ${by}'
+		if mut repost := repost_text(f) {
 			post << ui.label(text: repost, text_size: 13)
 		}
 
-		handle := f.post.author.handle
-		d_name := f.post.author.display_name
-		author := if d_name.len > 0 { d_name } else { handle }
+		post << ui.label(text: head_text(f))
+		post << ui.label(text: body_text(f))
 
-		created_at := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
-		time_short := created_at
-			.utc_to_local()
-			.relative_short()
-			.fields()[0]
-		time_stamp := if time_short == '0m' { '<1m' } else { time_short }
-
-		head := '• ${author} ∙ ${time_stamp}'
-		body := truncate_long_fields(f.post.record.text)
-			.wrap(width: 45)
-			.trim_space()
-
-		post << ui.label(text: head)
-		post << ui.label(text: body)
-
-		if f.post.embed.etype.contains('#view') {
-			if f.post.embed.external.thumb.len > 0 {
-				hash_name := hash.sum64_string(f.post.embed.external.thumb, 0).str()
-				tmp_file := os.join_path_single(tmp_dir, '${temp_prefix}_${hash_name}')
-				if !os.exists(tmp_file) {
-					http.download_file(f.post.embed.external.thumb, tmp_file) or {}
-				}
-				if mut app.window.ui.dd is ui.DrawDeviceContext {
-					image := app.window.ui.dd.create_image(tmp_file) or {
-						app.window.ui.img('v-logo')
-					}
-					post << ui.column(
-						alignment: .center
-						children:  [
-							ui.picture(
-								image:  image
-								width:  200
-								height: 125
-							),
-						]
-					)
-				}
-			}
+		if image := post_image(f, mut app) {
+			post << ui.column(
+				alignment: .center
+				children:  [ui.picture(image: image, width: 200, height: 125)]
+			)
 		}
 
 		post << ui.rectangle(height: 5)
@@ -110,6 +69,54 @@ fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
 		}
 		tl.add(children: widgets)
 	}
+}
+
+fn repost_text(f atprotocol.Feed) !string {
+	if f.reason.rtype.contains('Repost') {
+		by := if f.reason.by.display_name.len > 0 {
+			f.reason.by.display_name
+		} else {
+			f.reason.by.handle
+		}
+		return '> reposted by ${by}'
+	}
+	return error('no repost')
+}
+
+fn post_image(f atprotocol.Feed, mut app App) !gg.Image {
+	if f.post.embed.etype.contains('#view') {
+		if f.post.embed.external.thumb.len > 0 {
+			hash_name := hash.sum64_string(f.post.embed.external.thumb, 0).str()
+			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${hash_name}')
+			if !os.exists(tmp_file) {
+				http.download_file(f.post.embed.external.thumb, tmp_file) or {}
+			}
+			if mut app.window.ui.dd is ui.DrawDeviceContext {
+				return app.window.ui.dd.create_image(tmp_file) or { app.window.ui.img('v-logo') }
+			}
+		}
+	}
+	return error('no image')
+}
+
+fn head_text(f atprotocol.Feed) string {
+	handle := f.post.author.handle
+	d_name := f.post.author.display_name
+	author := if d_name.len > 0 { d_name } else { handle }
+
+	created_at := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
+	time_short := created_at
+		.utc_to_local()
+		.relative_short()
+		.fields()[0]
+	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
+	return '${author} @ ${time_stamp}'
+}
+
+fn body_text(f atprotocol.Feed) string {
+	return truncate_long_fields(f.post.record.text)
+		.wrap(width: 45)
+		.trim_space()
 }
 
 fn error_timeline(s string) atprotocol.Timeline {

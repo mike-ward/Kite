@@ -1,6 +1,5 @@
 import arrays
 import atprotocol
-import gg
 import hash
 import net.http
 import os
@@ -39,7 +38,7 @@ fn update_timeline(mut app App) {
 
 fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
 	mut widgets := []ui.Widget{}
-	widgets << ui.rectangle(height: 1) // spacer
+	widgets << spacer()
 
 	for f in timeline.feed {
 		mut post := []ui.Widget{cap: 10} // preallocate to avoid resizing
@@ -51,15 +50,25 @@ fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
 		post << ui.label(text: head_text(f))
 		post << ui.label(text: body_text(f))
 
-		if image := post_image(f, mut app) {
+		if image_path := post_image_path(f, mut app) {
 			post << ui.column(
 				alignment: .center
-				children:  [ui.picture(image: image, width: 200, height: 125)]
+				widths:    [ui.compact, ui.compact, ui.compact]
+				children:  [
+					spacer(),
+					ui.picture(
+						path:   image_path
+						width:  200
+						height: 125
+					),
+					spacer(),
+				]
 			)
 		}
 
-		post << ui.rectangle(height: 5)
-		post << ui.rectangle(border: true)
+		post << counts(f)
+		post << spacer()
+		post << border()
 		widgets << ui.column(children: post)
 	}
 
@@ -71,6 +80,14 @@ fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
 	}
 }
 
+fn spacer() ui.Widget {
+	return ui.rectangle(height: 5)
+}
+
+fn border() ui.Widget {
+	return ui.rectangle(border: true)
+}
+
 fn repost_text(f atprotocol.Feed) !string {
 	if f.reason.rtype.contains('Repost') {
 		by := if f.reason.by.display_name.len > 0 {
@@ -78,31 +95,15 @@ fn repost_text(f atprotocol.Feed) !string {
 		} else {
 			f.reason.by.handle
 		}
-		return '> reposted by ${by}'
+		return remove_non_printable('> reposted by ${by}')
 	}
 	return error('no repost')
-}
-
-fn post_image(f atprotocol.Feed, mut app App) !gg.Image {
-	if f.post.embed.etype.contains('#view') {
-		if f.post.embed.external.thumb.len > 0 {
-			hash_name := hash.sum64_string(f.post.embed.external.thumb, 0).str()
-			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${hash_name}')
-			if !os.exists(tmp_file) {
-				http.download_file(f.post.embed.external.thumb, tmp_file) or {}
-			}
-			if mut app.window.ui.dd is ui.DrawDeviceContext {
-				return app.window.ui.dd.create_image(tmp_file) or { app.window.ui.img('v-logo') }
-			}
-		}
-	}
-	return error('no image')
 }
 
 fn head_text(f atprotocol.Feed) string {
 	handle := f.post.author.handle
 	d_name := f.post.author.display_name
-	author := if d_name.len > 0 { d_name } else { handle }
+	author := remove_non_printable(if d_name.len > 0 { d_name } else { handle })
 
 	created_at := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
 	time_short := created_at
@@ -110,13 +111,38 @@ fn head_text(f atprotocol.Feed) string {
 		.relative_short()
 		.fields()[0]
 	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
-	return '${author} @ ${time_stamp}'
+	return '@ ${author} • ${time_stamp}'
 }
 
 fn body_text(f atprotocol.Feed) string {
-	return truncate_long_fields(f.post.record.text)
+	return remove_non_printable(truncate_long_fields(f.post.record.text))
 		.wrap(width: 45)
 		.trim_space()
+}
+
+fn post_image_path(f atprotocol.Feed, mut app App) !string {
+	if f.post.embed.etype.contains('#view') {
+		if f.post.embed.external.thumb.len > 0 {
+			hash_name := hash.sum64_string(f.post.embed.external.thumb, 0).str()
+			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${hash_name}')
+			if !os.exists(tmp_file) {
+				http.download_file(f.post.embed.external.thumb, tmp_file) or {}
+			}
+			return tmp_file
+		}
+	}
+	return error('no image')
+}
+
+fn counts(f atprotocol.Feed) ui.Widget {
+	return ui.row(
+		spacing:  5
+		children: [
+			ui.label(text: '• replies: ${f.post.reply_count}'),
+			ui.label(text: '• reposts: ${f.post.repost_count + f.post.quote_count}'),
+			ui.label(text: '• likes: ${f.post.like_count}'),
+		]
+	)
 }
 
 fn error_timeline(s string) atprotocol.Timeline {
@@ -143,6 +169,15 @@ fn truncate_long_fields(s string) string {
 		return match true {
 			elem.len > 35 { elem[..20] + '...' }
 			else { elem }
+		}
+	})
+}
+
+fn remove_non_printable(s string) string {
+	return arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
+		return match true {
+			elem.is_ascii() { elem }
+			else { '' }
 		}
 	})
 }

@@ -16,9 +16,13 @@ pub:
 
 pub struct Post {
 pub:
-	author Author
-	record Record
-	embed  Embed
+	author       Author
+	record       Record
+	embed        Embed
+	reply_count  int @[json: 'replyCount']
+	like_count   int @[json: 'likeCount']
+	repost_count int @[json: 'repostCount']
+	quote_count  int @[json: 'quoteCount']
 }
 
 pub struct Author {

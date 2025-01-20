@@ -30,11 +30,11 @@ fn main() {
 		children: [
 			ui.column(
 				id:       id_main_column
-				margin:   ui.Margin{
-					left:   3
-					bottom: 1
-				}
 				heights:  [ui.stretch, ui.stretch]
+				width:    app.settings.width - 3
+				margin:   ui.Margin{
+					left: 3
+				}
 				children: [login_view, timeline_view]
 			),
 		]

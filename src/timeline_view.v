@@ -43,17 +43,17 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	mut widgets := []ui.Widget{}
 	widgets << spacer()
 
-	for f in timeline.feeds {
+	for feed in timeline.feeds {
 		mut post := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
-		if mut repost := repost_text(f) {
+		if mut repost := repost_text(feed) {
 			post << ui.label(text: repost, text_size: 14)
 		}
 
-		post << ui.label(text: head_text(f))
-		post << ui.label(text: body_text(f))
+		post << ui.label(text: head_text(feed))
+		post << ui.label(text: body_text(feed))
 
-		if image_path := post_image_path(f, mut app) {
+		if image_path := post_image_path(feed) {
 			post << ui.column(
 				alignment: .center
 				widths:    [ui.compact, ui.compact, ui.compact]
@@ -69,7 +69,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			)
 		}
 
-		post << ui.label(text: post_counts(f), text_size: 15)
+		post << ui.label(text: post_counts(feed), text_size: 15)
 		post << spacer()
 		post << border()
 		widgets << ui.column(children: post)
@@ -91,24 +91,24 @@ fn border() ui.Widget {
 	return ui.rectangle(border: true)
 }
 
-fn repost_text(f atprotocol.Feed) !string {
-	if f.reason.rtype.contains('Repost') {
-		by := if f.reason.by.display_name.len > 0 {
-			f.reason.by.display_name
+fn repost_text(feed atprotocol.Feed) !string {
+	if feed.reason.rtype.contains('Repost') {
+		by := if feed.reason.by.display_name.len > 0 {
+			feed.reason.by.display_name
 		} else {
-			f.reason.by.handle
+			feed.reason.by.handle
 		}
 		return remove_non_ascii('> reposted by ${by}')
 	}
 	return error('no repost')
 }
 
-fn head_text(f atprotocol.Feed) string {
-	handle := f.post.author.handle
-	d_name := f.post.author.display_name
+fn head_text(feed atprotocol.Feed) string {
+	handle := feed.post.author.handle
+	d_name := feed.post.author.display_name
 	author := remove_non_ascii(if d_name.len > 0 { d_name } else { handle })
 
-	created_at := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
+	created_at := time.parse_iso8601(feed.post.record.created_at) or { time.utc() }
 	time_short := created_at
 		.utc_to_local()
 		.relative_short()
@@ -117,19 +117,19 @@ fn head_text(f atprotocol.Feed) string {
 	return '•${author} • ${time_stamp}'
 }
 
-fn body_text(f atprotocol.Feed) string {
-	return remove_non_ascii(truncate_long_fields(f.post.record.text))
+fn body_text(feed atprotocol.Feed) string {
+	return remove_non_ascii(truncate_long_fields(feed.post.record.text))
 		.wrap(width: 45)
 		.trim_space()
 }
 
-fn post_image_path(f atprotocol.Feed, mut app App) !string {
-	if f.post.embed.type.contains('#view') {
-		if f.post.embed.external.thumb.len > 0 {
-			hash_name := hash.sum64_string(f.post.embed.external.thumb, 0).str()
+fn post_image_path(feed atprotocol.Feed) !string {
+	if feed.post.embed.type.contains('#view') {
+		if feed.post.embed.external.thumb.len > 0 {
+			hash_name := hash.sum64_string(feed.post.embed.external.thumb, 0).str()
 			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${hash_name}')
 			if !os.exists(tmp_file) {
-				http.download_file(f.post.embed.external.thumb, tmp_file) or {}
+				http.download_file(feed.post.embed.external.thumb, tmp_file) or {}
 			}
 			return tmp_file
 		}
@@ -137,10 +137,10 @@ fn post_image_path(f atprotocol.Feed, mut app App) !string {
 	return error('no image')
 }
 
-fn post_counts(f atprotocol.Feed) string {
-	return ' • replies ${short_size(f.post.reply_count)} ' +
-		'• reposts ${short_size(f.post.repost_count + f.post.quote_count)} ' +
-		'• likes ${short_size(f.post.like_count)}'
+fn post_counts(feed atprotocol.Feed) string {
+	return ' • replies ${short_size(feed.post.reply_count)} ' +
+		'• reposts ${short_size(feed.post.repost_count + feed.post.quote_count)} ' +
+		'• likes ${short_size(feed.post.like_count)}'
 }
 
 fn error_timeline(s string) atprotocol.Timeline {
@@ -177,6 +177,7 @@ fn remove_non_ascii(s string) string {
 			.replace('“', '"')
 			.replace('”', '"')
 			.replace('’', "'")
+			.replace('‘', "'")
 		return match true {
 			e.is_ascii() { e }
 			else { '' }

@@ -19,14 +19,16 @@ fn create_timeline_view(mut app App) &ui.Widget {
 }
 
 fn start_timeline(mut app App) {
-	for {
-		update_timeline(mut app)
-		app.refresh_session_count += 1
-		if app.refresh_session_count % 10 == 0 { // Refresh the session every 10 minutes
-			refresh_session(mut app)
+	spawn fn [mut app] () {
+		for {
+			update_timeline(mut app)
+			app.refresh_session_count += 1
+			if app.refresh_session_count % 10 == 0 { // Refresh every 10 minutes
+				refresh_session(mut app)
+			}
+			time.sleep(time.minute)
 		}
-		time.sleep(time.minute)
-	}
+	}()
 }
 
 fn update_timeline(mut app App) {
@@ -34,10 +36,10 @@ fn update_timeline(mut app App) {
 		save_settings(Settings{})
 		error_timeline(err.msg())
 	}
-	ui_timeline(timeline, mut app)
+	build_timeline(timeline, mut app)
 }
 
-fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
+fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	mut widgets := []ui.Widget{}
 	widgets << spacer()
 
@@ -45,7 +47,7 @@ fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
 		mut post := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
 		if mut repost := repost_text(f) {
-			post << ui.label(text: repost, text_size: 13)
+			post << ui.label(text: repost, text_size: 14)
 		}
 
 		post << ui.label(text: head_text(f))
@@ -67,17 +69,17 @@ fn ui_timeline(timeline atprotocol.Timeline, mut app App) {
 			)
 		}
 
-		post << counts(f)
+		post << ui.label(text: post_counts(f), text_size: 15)
 		post << spacer()
 		post << border()
 		widgets << ui.column(children: post)
 	}
 
-	if mut tl := app.window.get[ui.Stack](id_timeline) {
-		for tl.children.len > 0 {
-			tl.remove()
+	if mut stack := app.window.get[ui.Stack](id_timeline) {
+		for stack.children.len > 0 {
+			stack.remove()
 		}
-		tl.add(children: widgets)
+		stack.add(children: widgets)
 	}
 }
 
@@ -135,15 +137,10 @@ fn post_image_path(f atprotocol.Feed, mut app App) !string {
 	return error('no image')
 }
 
-fn counts(f atprotocol.Feed) ui.Widget {
-	return ui.row(
-		spacing:  5
-		children: [
-			ui.label(text: '• replies: ${short_size(f.post.reply_count)}'),
-			ui.label(text: '• reposts: ${short_size(f.post.repost_count + f.post.quote_count)}'),
-			ui.label(text: '• likes: ${short_size(f.post.like_count)}'),
-		]
-	)
+fn post_counts(f atprotocol.Feed) string {
+	return ' • replies ${short_size(f.post.reply_count)} ' +
+		'• reposts ${short_size(f.post.repost_count + f.post.quote_count)} ' +
+		'• likes ${short_size(f.post.like_count)}'
 }
 
 fn error_timeline(s string) atprotocol.Timeline {
@@ -185,10 +182,14 @@ fn remove_non_printable(s string) string {
 
 fn short_size(size int) string {
 	kb := 1000
-	mut sz := size
-	for unit in ['', 'k', 'm', 'g', 't', 'p', 'e', 'z'] {
+	mut sz := f64(size)
+	for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'] {
 		if sz < kb {
-			return '${sz}${unit}'
+			readable := match unit == '' {
+				true { size.str() }
+				else { math.round_sig(sz + .049999, 1).str() }
+			}
+			return '${readable}${unit}'
 		}
 		sz /= kb
 	}

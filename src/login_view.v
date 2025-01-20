@@ -53,7 +53,7 @@ fn (mut app App) login(login Login) {
 	}
 	save_settings(app.settings)
 	remove_login_view(mut app)
-	spawn start_timeline(mut app)
+	start_timeline(mut app)
 }
 
 fn refresh_session(mut app App) {

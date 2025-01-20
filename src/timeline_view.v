@@ -5,6 +5,7 @@ import net.http
 import os
 import time
 import ui
+import math
 
 const id_timeline = 'timeline'
 const error_title = 'kite error'
@@ -111,7 +112,7 @@ fn head_text(f atprotocol.Feed) string {
 		.relative_short()
 		.fields()[0]
 	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
-	return '@ ${author} • ${time_stamp}'
+	return '•${author} • ${time_stamp}'
 }
 
 fn body_text(f atprotocol.Feed) string {
@@ -138,9 +139,9 @@ fn counts(f atprotocol.Feed) ui.Widget {
 	return ui.row(
 		spacing:  5
 		children: [
-			ui.label(text: '• replies: ${f.post.reply_count}'),
-			ui.label(text: '• reposts: ${f.post.repost_count + f.post.quote_count}'),
-			ui.label(text: '• likes: ${f.post.like_count}'),
+			ui.label(text: '• replies: ${short_size(f.post.reply_count)}'),
+			ui.label(text: '• reposts: ${short_size(f.post.repost_count + f.post.quote_count)}'),
+			ui.label(text: '• likes: ${short_size(f.post.like_count)}'),
 		]
 	)
 }
@@ -180,4 +181,16 @@ fn remove_non_printable(s string) string {
 			else { '' }
 		}
 	})
+}
+
+fn short_size(size int) string {
+	kb := 1000
+	mut sz := size
+	for unit in ['', 'k', 'm', 'g', 't', 'p', 'e', 'z'] {
+		if sz < kb {
+			return '${sz}${unit}'
+		}
+		sz /= kb
+	}
+	return size.str()
 }

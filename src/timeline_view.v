@@ -138,9 +138,9 @@ fn post_image_path(feed atprotocol.Feed) !string {
 }
 
 fn post_counts(feed atprotocol.Feed) string {
-	return ' • replies ${short_size(feed.post.reply_count)} ' +
-		'• reposts ${short_size(feed.post.repost_count + feed.post.quote_count)} ' +
-		'• likes ${short_size(feed.post.like_count)}'
+	return ' • replies ${short_size(feed.post.replys)} ' +
+		'• reposts ${short_size(feed.post.reposts + feed.post.quotes)} ' +
+		'• likes ${short_size(feed.post.likes)}'
 }
 
 fn error_timeline(s string) atprotocol.Timeline {

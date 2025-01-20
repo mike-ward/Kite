@@ -12,18 +12,18 @@ pub struct Feed {
 pub:
 	post   struct {
 	pub:
-		author       struct {
+		author  struct {
 		pub:
 			handle       string
 			display_name string @[json: 'displayName']
 		}
-		record       struct {
+		record  struct {
 		pub:
 			type       string @[json: '\$type']
 			text       string @[json: 'text']
 			created_at string @[json: 'createdAt']
 		}
-		embed        struct {
+		embed   struct {
 		pub:
 			type     string @[json: '\$type']
 			external struct {
@@ -34,10 +34,10 @@ pub:
 				thumb       string
 			}
 		}
-		reply_count  int @[json: 'replyCount']
-		like_count   int @[json: 'likeCount']
-		repost_count int @[json: 'repostCount']
-		quote_count  int @[json: 'quoteCount']
+		replys  int @[json: 'replyCount']
+		likes   int @[json: 'likeCount']
+		reposts int @[json: 'repostCount']
+		quotes  int @[json: 'quoteCount']
 	}
 	reason struct {
 	pub:

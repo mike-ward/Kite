@@ -41,8 +41,8 @@ pub:
 	}
 	reason struct {
 	pub:
-		rtype string @[json: '\$type']
-		by    struct {
+		type string @[json: '\$type']
+		by   struct {
 		pub:
 			handle       string
 			display_name string @[json: 'displayName']

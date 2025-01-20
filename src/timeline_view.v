@@ -92,7 +92,7 @@ fn border() ui.Widget {
 }
 
 fn repost_text(feed atprotocol.Feed) !string {
-	if feed.reason.rtype.contains('Repost') {
+	if feed.reason.type.contains('Repost') {
 		by := if feed.reason.by.display_name.len > 0 {
 			feed.reason.by.display_name
 		} else {
@@ -138,7 +138,7 @@ fn post_image_path(feed atprotocol.Feed) !string {
 }
 
 fn post_counts(feed atprotocol.Feed) string {
-	return ' • replies ${short_size(feed.post.replys)} ' +
+	return '• replies ${short_size(feed.post.replys)} ' +
 		'• reposts ${short_size(feed.post.reposts + feed.post.quotes)} ' +
 		'• likes ${short_size(feed.post.likes)}'
 }

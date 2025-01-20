@@ -5,63 +5,49 @@ import net.http
 
 pub struct Timeline {
 pub:
-	feed []Feed
+	feeds []Feed @[json: 'feed']
 }
 
 pub struct Feed {
 pub:
-	post   Post
-	reason Reason
-}
-
-pub struct Post {
-pub:
-	author       Author
-	record       Record
-	embed        Embed
-	reply_count  int @[json: 'replyCount']
-	like_count   int @[json: 'likeCount']
-	repost_count int @[json: 'repostCount']
-	quote_count  int @[json: 'quoteCount']
-}
-
-pub struct Author {
-pub:
-	handle       string
-	display_name string @[json: 'displayName']
-}
-
-pub struct Record {
-pub:
-	rtype      string @[json: '\$type']
-	text       string @[json: 'text']
-	created_at string @[json: 'createdAt']
-}
-
-pub struct Reason {
-pub:
-	rtype string @[json: '\$type']
-	by    By
-}
-
-pub struct By {
-pub:
-	handle       string
-	display_name string @[json: 'displayName']
-}
-
-pub struct Embed {
-pub:
-	etype    string @[json: '\$type']
-	external External
-}
-
-pub struct External {
-pub:
-	uri         string
-	title       string
-	description string
-	thumb       string
+	post   struct {
+	pub:
+		author       struct {
+		pub:
+			handle       string
+			display_name string @[json: 'displayName']
+		}
+		record       struct {
+		pub:
+			type       string @[json: '\$type']
+			text       string @[json: 'text']
+			created_at string @[json: 'createdAt']
+		}
+		embed        struct {
+		pub:
+			type     string @[json: '\$type']
+			external struct {
+			pub:
+				uri         string
+				title       string
+				description string
+				thumb       string
+			}
+		}
+		reply_count  int @[json: 'replyCount']
+		like_count   int @[json: 'likeCount']
+		repost_count int @[json: 'repostCount']
+		quote_count  int @[json: 'quoteCount']
+	}
+	reason struct {
+	pub:
+		rtype string @[json: '\$type']
+		by    struct {
+		pub:
+			handle       string
+			display_name string @[json: 'displayName']
+		}
+	}
 }
 
 pub fn (session Session) get_timeline() !Timeline {

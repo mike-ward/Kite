@@ -43,7 +43,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	mut widgets := []ui.Widget{}
 	widgets << spacer()
 
-	for f in timeline.feed {
+	for f in timeline.feeds {
 		mut post := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
 		if mut repost := repost_text(f) {
@@ -98,7 +98,7 @@ fn repost_text(f atprotocol.Feed) !string {
 		} else {
 			f.reason.by.handle
 		}
-		return remove_non_printable('> reposted by ${by}')
+		return remove_non_ascii('> reposted by ${by}')
 	}
 	return error('no repost')
 }
@@ -106,7 +106,7 @@ fn repost_text(f atprotocol.Feed) !string {
 fn head_text(f atprotocol.Feed) string {
 	handle := f.post.author.handle
 	d_name := f.post.author.display_name
-	author := remove_non_printable(if d_name.len > 0 { d_name } else { handle })
+	author := remove_non_ascii(if d_name.len > 0 { d_name } else { handle })
 
 	created_at := time.parse_iso8601(f.post.record.created_at) or { time.utc() }
 	time_short := created_at
@@ -118,13 +118,13 @@ fn head_text(f atprotocol.Feed) string {
 }
 
 fn body_text(f atprotocol.Feed) string {
-	return remove_non_printable(truncate_long_fields(f.post.record.text))
+	return remove_non_ascii(truncate_long_fields(f.post.record.text))
 		.wrap(width: 45)
 		.trim_space()
 }
 
 fn post_image_path(f atprotocol.Feed, mut app App) !string {
-	if f.post.embed.etype.contains('#view') {
+	if f.post.embed.type.contains('#view') {
 		if f.post.embed.external.thumb.len > 0 {
 			hash_name := hash.sum64_string(f.post.embed.external.thumb, 0).str()
 			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${hash_name}')
@@ -145,14 +145,14 @@ fn post_counts(f atprotocol.Feed) string {
 
 fn error_timeline(s string) atprotocol.Timeline {
 	return atprotocol.Timeline{
-		feed: [
-			atprotocol.Feed{
-				post: atprotocol.Post{
-					author: atprotocol.Author{
+		feeds: [
+			struct {
+				post: struct {
+					author: struct {
 						handle:       error_title
 						display_name: error_title
 					}
-					record: atprotocol.Record{
+					record: struct {
 						text:       s
 						created_at: time.now().format_rfc3339()
 					}
@@ -171,10 +171,14 @@ fn truncate_long_fields(s string) string {
 	})
 }
 
-fn remove_non_printable(s string) string {
+fn remove_non_ascii(s string) string {
 	return arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
+		e := elem
+			.replace('“', '"')
+			.replace('”', '"')
+			.replace('’', "'")
 		return match true {
-			elem.is_ascii() { elem }
+			e.is_ascii() { e }
 			else { '' }
 		}
 	})
@@ -185,11 +189,11 @@ fn short_size(size int) string {
 	mut sz := f64(size)
 	for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'] {
 		if sz < kb {
-			readable := match unit == '' {
+			short := match unit == '' {
 				true { size.str() }
 				else { math.round_sig(sz + .049999, 1).str() }
 			}
-			return '${readable}${unit}'
+			return '${short}${unit}'
 		}
 		sz /= kb
 	}

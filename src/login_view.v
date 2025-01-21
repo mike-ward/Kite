@@ -14,7 +14,7 @@ fn create_login_view(mut app App) &ui.Widget {
 		margin:   ui.Margin{20, 20, 20, 20}
 		spacing:  5
 		children: [
-			ui.label(text: 'Bluesky Login'),
+			ui.label(text: 'Bluesky Login', text_color: app.txt_color),
 			ui.textbox(
 				max_len:     20
 				width:       200

@@ -1,11 +1,12 @@
 import arrays
 import atprotocol
 import hash
+import math
 import net.http
 import os
+import regex
 import time
 import ui
-import math
 
 const id_timeline = 'timeline'
 const error_title = 'kite error'
@@ -47,11 +48,11 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		mut post := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
 		if mut repost := repost_text(feed) {
-			post << ui.label(text: repost, text_size: 14)
+			post << ui.label(text: repost, text_size: 14, text_color: app.txt_color)
 		}
 
-		post << ui.label(text: head_text(feed))
-		post << ui.label(text: body_text(feed))
+		post << ui.label(text: head_text(feed), text_color: app.txt_color_bright)
+		post << ui.label(text: body_text(feed), text_color: app.txt_color)
 
 		if image_path := post_image_path(feed) {
 			post << ui.column(
@@ -69,9 +70,10 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			)
 		}
 
-		post << ui.label(text: post_counts(feed), text_size: 15)
 		post << spacer()
-		post << border()
+		post << ui.label(text: post_counts(feed), text_size: 15, text_color: app.txt_color)
+		post << spacer()
+		post << border(app)
 		widgets << ui.column(children: post)
 	}
 
@@ -87,8 +89,8 @@ fn spacer() ui.Widget {
 	return ui.rectangle(height: 5)
 }
 
-fn border() ui.Widget {
-	return ui.rectangle(border: true)
+fn border(app App) ui.Widget {
+	return ui.rectangle(border: true, border_color: app.border_color)
 }
 
 fn repost_text(feed atprotocol.Feed) !string {
@@ -98,7 +100,7 @@ fn repost_text(feed atprotocol.Feed) !string {
 		} else {
 			feed.reason.by.handle
 		}
-		return remove_non_ascii('> reposted by ${by}')
+		return remove_non_ascii('reposted by ${by}')
 	}
 	return error('no repost')
 }
@@ -172,17 +174,19 @@ fn truncate_long_fields(s string) string {
 }
 
 fn remove_non_ascii(s string) string {
-	return arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
-		e := elem
+	// convert smart quotes to regular quotes
+	s1 := arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
+		return elem
 			.replace('“', '"')
 			.replace('”', '"')
 			.replace('’', "'")
 			.replace('‘', "'")
-		return match true {
-			e.is_ascii() { e }
-			else { '' }
-		}
 	})
+	// strip out non-ascii characters
+	if mut query := regex.regex_opt(r"[^' ',!-~]") {
+		return query.replace(s1, '')
+	}
+	return s1
 }
 
 fn short_size(size int) string {

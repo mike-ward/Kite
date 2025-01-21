@@ -9,6 +9,10 @@ mut:
 	window                &ui.Window = unsafe { nil }
 	settings              Settings
 	refresh_session_count int
+	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
+	txt_color             gx.Color = gx.rgb(0xcc, 0xcc, 0xcc)
+	txt_color_bright      gx.Color = gx.white
+	border_color          gx.Color = gx.rgb(0x80, 0x80, 0x80)
 }
 
 fn main() {
@@ -26,19 +30,19 @@ fn main() {
 		height:   app.settings.height
 		width:    app.settings.width
 		title:    'Kite'
-		bg_color: gx.rgb(0xf9, 0xf9, 0xf9)
+		bg_color: app.bg_color
 		children: [
 			ui.column(
 				id:       id_main_column
 				heights:  [ui.stretch, ui.stretch]
-				width:    app.settings.width - 3
+				width:    app.settings.width - 5
 				margin:   ui.Margin{
-					left: 3
+					left: 5
 				}
 				children: [login_view, timeline_view]
 			),
 		]
-		on_init:  fn [mut app] (window &ui.Window) {
+		on_init:  fn [mut app] (mut window ui.Window) {
 			if app.settings.is_valid() {
 				remove_login_view(mut app)
 				start_timeline(mut app)

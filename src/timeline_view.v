@@ -51,7 +51,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			post << ui.label(text: repost, text_size: 14, text_color: app.txt_color)
 		}
 
-		post << ui.label(text: head_text(feed), text_color: app.txt_color_bright)
+		post << ui.label(text: head_text(feed), text_color: app.txt_color_bold)
 		post << ui.label(text: body_text(feed), text_color: app.txt_color)
 
 		if image_path := post_image_path(feed) {
@@ -140,7 +140,7 @@ fn post_image_path(feed atprotocol.Feed) !string {
 }
 
 fn post_counts(feed atprotocol.Feed) string {
-	return '• replies ${short_size(feed.post.replys)} ' +
+	return '• replies ${short_size(feed.post.replies)} ' +
 		'• reposts ${short_size(feed.post.reposts + feed.post.quotes)} ' +
 		'• likes ${short_size(feed.post.likes)}'
 }

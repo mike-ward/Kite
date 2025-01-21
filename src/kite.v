@@ -11,7 +11,7 @@ mut:
 	refresh_session_count int
 	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
 	txt_color             gx.Color = gx.rgb(0xcc, 0xcc, 0xcc)
-	txt_color_bright      gx.Color = gx.white
+	txt_color_bold        gx.Color = gx.white
 	border_color          gx.Color = gx.rgb(0x80, 0x80, 0x80)
 }
 

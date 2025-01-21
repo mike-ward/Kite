@@ -34,7 +34,7 @@ pub:
 				thumb       string
 			}
 		}
-		replys  int @[json: 'replyCount']
+		replies int @[json: 'replyCount']
 		likes   int @[json: 'likeCount']
 		reposts int @[json: 'repostCount']
 		quotes  int @[json: 'quoteCount']

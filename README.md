@@ -12,8 +12,8 @@ Currently in development so consider this a proof-of-concept for now.
 Install the V compiler from https://vlang.io
 
 ```
-git clone
-cd kite
+git clone https://github.com/mike-ward/Kite
+cd kite/src
 v install ui
 v run .
 ```

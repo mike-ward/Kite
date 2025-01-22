@@ -54,21 +54,22 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		post << ui.label(text: head_text(feed), text_color: app.txt_color_bold)
 		post << ui.label(text: body_text(feed), text_color: app.txt_color)
 
-		if image_path := post_image_path(feed) {
-			post << ui.column(
-				alignment: .center
-				widths:    [ui.compact, ui.compact, ui.compact]
-				children:  [
-					spacer(),
-					ui.picture(
-						path:   image_path
-						width:  200
-						height: 125
-					),
-					spacer(),
-				]
-			)
-		}
+		// TODO: images cause the app to crash in gg after a time
+		// if image_path := post_image_path(feed) {
+		// 	post << ui.column(
+		// 		id:        'pic_col'
+		// 		alignment: .center
+		// 		children:  [
+		// 			spacer(),
+		// 			ui.picture(
+		// 				path:   image_path
+		// 				width:  200
+		// 				height: 125
+		// 			),
+		// 			spacer(),
+		// 		]
+		// 	)
+		// }
 
 		post << spacer()
 		post << ui.label(text: post_counts(feed), text_size: 15, text_color: app.txt_color)
@@ -79,7 +80,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 
 	if mut stack := app.window.get[ui.Stack](id_timeline) {
 		for stack.children.len > 0 {
-			stack.remove()
+			stack.remove(at: stack.children.len - 1)
 		}
 		stack.add(children: widgets)
 	}
@@ -131,7 +132,7 @@ fn post_image_path(feed atprotocol.Feed) !string {
 			hash_name := hash.sum64_string(feed.post.embed.external.thumb, 0).str()
 			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${hash_name}')
 			if !os.exists(tmp_file) {
-				http.download_file(feed.post.embed.external.thumb, tmp_file) or {}
+				http.download_file(feed.post.embed.external.thumb, tmp_file)!
 			}
 			return tmp_file
 		}

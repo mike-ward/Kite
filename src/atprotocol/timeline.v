@@ -53,7 +53,7 @@ pub:
 pub fn (session Session) get_timeline() !Timeline {
 	response := http.fetch(
 		method: .get
-		url:    '${pds_host}/app.bsky.feed.getTimeline'
+		url:    '${pds_host}/app.bsky.feed.getTimeline?limit=25'
 		header: http.new_header(
 			key:   .authorization
 			value: 'Bearer ${session.access_jwt}'

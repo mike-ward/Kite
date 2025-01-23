@@ -45,13 +45,13 @@ fn main() {
 				children:   [login_view, timeline_view]
 			),
 		]
-		on_init:   fn [mut app] (window &ui.Window) {
+		on_init:   fn [mut app] (_ &ui.Window) {
 			if app.settings.is_valid() {
 				remove_login_view(mut app)
 				start_timeline(mut app)
 			}
 		}
-		on_resize: fn [mut app] (window &ui.Window, w int, h int) {
+		on_resize: fn [mut app] (_ &ui.Window, w int, h int) {
 			build_timeline(mut app)
 		}
 	)

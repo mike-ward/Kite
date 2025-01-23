@@ -10,9 +10,9 @@ mut:
 	settings              Settings
 	refresh_session_count int
 	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
-	txt_color             gx.Color = gx.rgb(0xcc, 0xcc, 0xcc)
-	txt_color_bold        gx.Color = gx.white
-	border_color          gx.Color = gx.rgb(0x80, 0x80, 0x80)
+	txt_color             gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
+	txt_color_dim         gx.Color = gx.rgb(0x80, 0x80, 0x80)
+	txt_color_bold        gx.Color = gx.rgb(0xfe, 0xfe, 0xfe)
 }
 
 fn main() {
@@ -33,13 +33,14 @@ fn main() {
 		bg_color: app.bg_color
 		children: [
 			ui.column(
-				id:       id_main_column
-				heights:  [ui.stretch, ui.stretch]
-				width:    app.settings.width - 5
-				margin:   ui.Margin{
-					left: 5
+				id:         id_main_column
+				heights:    [ui.stretch, ui.stretch]
+				margin:     ui.Margin{
+					left:  5
+					right: 5
 				}
-				children: [login_view, timeline_view]
+				scrollview: true
+				children:   [login_view, timeline_view]
 			),
 		]
 		on_init:  fn [mut app] (mut window ui.Window) {

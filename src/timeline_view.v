@@ -32,20 +32,20 @@ fn start_timeline(mut app App) {
 }
 
 fn update_timeline(mut app App) {
-	timeline := app.settings.session.get_timeline() or {
+	app.timeline = app.settings.session.get_timeline() or {
 		save_settings(Settings{})
 		error_timeline(err.msg())
 	}
-	build_timeline(timeline, mut app)
+	build_timeline(mut app)
 }
 
-fn build_timeline(timeline atprotocol.Timeline, mut app App) {
+fn build_timeline(mut app App) {
 	if mut stack := app.window.get[ui.Stack](id_timeline) {
 		text_size := 16
 		text_width := stack.width - 5
 		mut widgets := []ui.Widget{}
 
-		for feed in timeline.feeds {
+		for feed in app.timeline.feeds {
 			mut post := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
 			if mut repost := repost_text(feed) {
@@ -73,16 +73,16 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			// 		id:        'pic_col'
 			// 		alignment: .center
 			// 		children:  [
-			// 			spacer(),
+			// 			v_space(),
 			// 			ui.picture(
 			// 				path:   image_path
 			// 				width:  200
 			// 				height: 125
 			// 			),
-			// 			spacer(),
+			// 			v_space(),
 			// 		]
 			// 	)
-			//      post << spacer()
+			// 	post << v_space()
 			// }
 
 			post << ui.label(
@@ -90,23 +90,23 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				text_size:  text_size - 2
 				text_color: app.txt_color_dim
 			)
-			post << spacer()
-			post << border(app)
+			post << v_space()
+			post << h_line(app)
 			widgets << ui.column(children: post)
 		}
 
 		for stack.children.len > 0 {
-			stack.remove(at: stack.children.len - 1)
+			stack.remove()
 		}
 		stack.add(children: widgets)
 	}
 }
 
-fn spacer() ui.Widget {
+fn v_space() ui.Widget {
 	return ui.rectangle(height: 5)
 }
 
-fn border(app App) ui.Widget {
+fn h_line(app App) ui.Widget {
 	return ui.rectangle(border: true, border_color: app.txt_color_dim)
 }
 
@@ -148,6 +148,7 @@ fn post_image_path(feed atprotocol.Feed) !string {
 			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${hash_name}')
 			if !os.exists(tmp_file) {
 				http.download_file(feed.post.embed.external.thumb, tmp_file)!
+				// image := app.window.ui.gg.create_image_with_size(tmp_file, 200, 125)
 			}
 			return tmp_file
 		}

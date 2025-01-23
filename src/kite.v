@@ -1,3 +1,4 @@
+import atprotocol
 import ui
 import gx
 
@@ -9,6 +10,7 @@ mut:
 	window                &ui.Window = unsafe { nil }
 	settings              Settings
 	refresh_session_count int
+	timeline              atprotocol.Timeline
 	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
 	txt_color             gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
 	txt_color_dim         gx.Color = gx.rgb(0x80, 0x80, 0x80)
@@ -27,11 +29,11 @@ fn main() {
 	timeline_view := create_timeline_view(mut app)
 
 	app.window = ui.window(
-		height:   app.settings.height
-		width:    app.settings.width
-		title:    'Kite'
-		bg_color: app.bg_color
-		children: [
+		height:    app.settings.height
+		width:     app.settings.width
+		title:     'Kite'
+		bg_color:  app.bg_color
+		children:  [
 			ui.column(
 				id:         id_main_column
 				heights:    [ui.stretch, ui.stretch]
@@ -43,11 +45,14 @@ fn main() {
 				children:   [login_view, timeline_view]
 			),
 		]
-		on_init:  fn [mut app] (mut window ui.Window) {
+		on_init:   fn [mut app] (window &ui.Window) {
 			if app.settings.is_valid() {
 				remove_login_view(mut app)
 				start_timeline(mut app)
 			}
+		}
+		on_resize: fn [mut app] (window &ui.Window, w int, h int) {
+			build_timeline(mut app)
 		}
 	)
 
@@ -56,7 +61,7 @@ fn main() {
 
 fn remove_login_view(mut app App) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
-		if stack.children.len > 1 {
+		for stack.children.len > 1 {
 			stack.remove(at: 0)
 		}
 	}

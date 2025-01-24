@@ -1,8 +1,6 @@
 import arrays
 import atprotocol
-import hash
 import math
-import net.http
 import os
 import regex
 import time
@@ -67,23 +65,22 @@ fn build_timeline(mut app App) {
 				text_color: app.txt_color
 			)
 
-			// images cause the app to crash in gg after a time
-			// if image_path := post_image_path(feed) {
-			// 	post << ui.column(
-			// 		id:        'pic_col'
-			// 		alignment: .center
-			// 		children:  [
-			// 			v_space(),
-			// 			ui.picture(
-			// 				path:   image_path
-			// 				width:  200
-			// 				height: 125
-			// 			),
-			// 			v_space(),
-			// 		]
-			// 	)
-			// 	post << v_space()
-			// }
+			if image_path := post_image_path(feed) {
+				post << ui.column(
+					id:        'pic_col'
+					alignment: .center
+					children:  [
+						v_space(),
+						ui.picture(
+							path:   image_path
+							width:  200
+							height: 125
+						),
+						v_space(),
+					]
+				)
+				post << v_space()
+			}
 
 			post << ui.label(
 				text:       post_counts(feed)
@@ -142,12 +139,14 @@ fn body_text(feed atprotocol.Feed, width int, u &ui.UI) string {
 }
 
 fn post_image_path(feed atprotocol.Feed) !string {
-	if feed.post.embed.type.contains('#view') {
-		if feed.post.embed.external.thumb.len > 0 {
-			hash_name := hash.sum64_string(feed.post.embed.external.thumb, 0).str()
-			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${hash_name}')
+	if feed.post.record.embed.images.len > 0 {
+		image_info := feed.post.record.embed.images[0].image
+		if image_info.ref.link.len > 0 {
+			cid := image_info.ref.link
+			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${cid}')
 			if !os.exists(tmp_file) {
-				http.download_file(feed.post.embed.external.thumb, tmp_file)!
+				blob := atprotocol.get_blob(feed.post.author.did, cid)!
+				os.write_file(tmp_file, blob)!
 				// image := app.window.ui.gg.create_image_with_size(tmp_file, 200, 125)
 			}
 			return tmp_file

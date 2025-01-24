@@ -9,8 +9,8 @@ struct App {
 mut:
 	window                &ui.Window = unsafe { nil }
 	settings              Settings
-	refresh_session_count int
 	timeline              atprotocol.Timeline
+	refresh_session_count int
 	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
 	txt_color             gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
 	txt_color_dim         gx.Color = gx.rgb(0x80, 0x80, 0x80)

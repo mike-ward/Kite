@@ -14,24 +14,37 @@ pub:
 	pub:
 		author  struct {
 		pub:
+			did          string
 			handle       string
 			display_name string @[json: 'displayName']
 		}
 		record  struct {
 		pub:
 			type       string @[json: '\$type']
-			text       string @[json: 'text']
+			text       string
 			created_at string @[json: 'createdAt']
-		}
-		embed   struct {
-		pub:
-			type     string @[json: '\$type']
-			external struct {
+			embed      struct {
 			pub:
-				uri         string
-				title       string
-				description string
-				thumb       string
+				type         string @[json: '\$type']
+				images       []struct {
+				pub:
+					alt   string
+					image struct {
+					pub:
+						type      string @[json: '\$type']
+						mime_type string @[json: 'mimeType']
+						size      int
+						ref       struct {
+						pub:
+							link string @[json: '\$link']
+						}
+					}
+				}
+				aspect_ratio struct {
+				pub:
+					width  int
+					hieght int
+				} @[json: 'aspectRatio']
 			}
 		}
 		replies int @[json: 'replyCount']

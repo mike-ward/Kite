@@ -37,10 +37,7 @@ fn main() {
 			ui.column(
 				id:         id_main_column
 				heights:    [ui.stretch, ui.stretch]
-				margin:     ui.Margin{
-					left:  5
-					right: 5
-				}
+				margin:     ui.Margin{0, 0, 0, 10}
 				scrollview: true
 				children:   [login_view, timeline_view]
 			),

@@ -25,11 +25,16 @@ pub:
 			created_at string @[json: 'createdAt']
 			embed      struct {
 			pub:
-				type         string @[json: '\$type']
-				images       []struct {
+				type   string @[json: '\$type']
+				images []struct {
 				pub:
-					alt   string
-					image struct {
+					alt          string
+					aspect_ratio struct {
+					pub:
+						width  int
+						height int
+					} @[json: 'aspectRatio']
+					image        struct {
 					pub:
 						type      string @[json: '\$type']
 						mime_type string @[json: 'mimeType']
@@ -40,11 +45,6 @@ pub:
 						}
 					}
 				}
-				aspect_ratio struct {
-				pub:
-					width  int
-					hieght int
-				} @[json: 'aspectRatio']
 			}
 		}
 		replies int @[json: 'replyCount']

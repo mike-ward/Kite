@@ -40,7 +40,7 @@ fn update_timeline(mut app App) {
 fn build_timeline(mut app App) {
 	if mut stack := app.window.get[ui.Stack](id_timeline) {
 		text_size := 16
-		text_width := stack.width - 5
+		text_width := stack.width - 10
 		mut widgets := []ui.Widget{}
 
 		for feed in app.timeline.feeds {
@@ -65,7 +65,8 @@ fn build_timeline(mut app App) {
 				text_color: app.txt_color
 			)
 
-			if image_path := post_image_path(feed) {
+			if image_path, aspect_ratio := get_post_image(feed) {
+				image_width := 200
 				post << ui.column(
 					id:        'pic_col'
 					alignment: .center
@@ -73,13 +74,14 @@ fn build_timeline(mut app App) {
 						v_space(),
 						ui.picture(
 							path:   image_path
-							width:  200
-							height: 125
+							width:  image_width
+							height: int(image_width * aspect_ratio)
 						),
 						v_space(),
 					]
 				)
 				post << v_space()
+			} else {
 			}
 
 			post << ui.label(
@@ -138,7 +140,7 @@ fn body_text(feed atprotocol.Feed, width int, u &ui.UI) string {
 	return wrap_text(ascii, width, u).trim_space()
 }
 
-fn post_image_path(feed atprotocol.Feed) !string {
+fn get_post_image(feed atprotocol.Feed) !(string, f64) {
 	if feed.post.record.embed.images.len > 0 {
 		image_info := feed.post.record.embed.images[0].image
 		if image_info.ref.link.len > 0 {
@@ -149,10 +151,15 @@ fn post_image_path(feed atprotocol.Feed) !string {
 				os.write_file(tmp_file, blob)!
 				// image := app.window.ui.gg.create_image_with_size(tmp_file, 200, 125)
 			}
-			return tmp_file
+			aspect_ratio := feed.post.record.embed.images[0].aspect_ratio
+			ratio := match aspect_ratio.width != 0 && aspect_ratio.height != 0 {
+				true { f64(aspect_ratio.height) / f64(aspect_ratio.width) }
+				else { 1.0 }
+			}
+			return tmp_file, ratio
 		}
 	}
-	return error('no image')
+	return error('no image found')
 }
 
 fn post_counts(feed atprotocol.Feed) string {
@@ -197,6 +204,7 @@ fn remove_non_ascii(s string) string {
 			.replace('”', '"')
 			.replace('’', "'")
 			.replace('‘', "'")
+			.replace('—', '--')
 	})
 	// strip out non-ascii characters
 	if mut query := regex.regex_opt(r"[^' ',!-~]") {

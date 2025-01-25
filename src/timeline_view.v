@@ -3,6 +3,7 @@ import atprotocol
 import math
 import os
 import regex
+import stbi
 import time
 import ui
 
@@ -17,6 +18,7 @@ fn create_timeline_view(mut app App) &ui.Widget {
 }
 
 fn start_timeline(mut app App) {
+	clear_image_cache()
 	spawn fn [mut app] () {
 		for {
 			update_timeline(mut app)
@@ -65,23 +67,25 @@ fn build_timeline(mut app App) {
 				text_color: app.txt_color
 			)
 
-			if image_path, aspect_ratio := get_post_image(feed) {
-				image_width := 200
+			if _, title := get_external_link(feed) {
+				post << ui.label(
+					text:       wrap_text(remove_non_ascii(truncate_long_fields(title)),
+						text_width, stack.ui)
+					text_size:  text_size
+					text_color: app.txt_color_link
+				)
+			}
+
+			if image_path, _ := get_post_image(feed) {
 				post << ui.column(
-					id:        'pic_col'
 					alignment: .center
 					children:  [
 						v_space(),
-						ui.picture(
-							path:   image_path
-							width:  image_width
-							height: int(image_width * aspect_ratio)
-						),
+						ui.picture(path: image_path),
 						v_space(),
 					]
 				)
 				post << v_space()
-			} else {
 			}
 
 			post << ui.label(
@@ -140,23 +144,35 @@ fn body_text(feed atprotocol.Feed, width int, u &ui.UI) string {
 	return wrap_text(ascii, width, u).trim_space()
 }
 
-fn get_post_image(feed atprotocol.Feed) !(string, f64) {
+fn get_external_link(feed atprotocol.Feed) !(string, string) {
+	return match feed.post.record.embed.external.uri.len > 0 {
+		true { feed.post.record.embed.external.uri, feed.post.record.embed.external.title }
+		else { error('') }
+	}
+}
+
+fn get_post_image(feed atprotocol.Feed) !(string, string) {
 	if feed.post.record.embed.images.len > 0 {
-		image_info := feed.post.record.embed.images[0].image
-		if image_info.ref.link.len > 0 {
-			cid := image_info.ref.link
+		image := feed.post.record.embed.images[0]
+		if image.image.ref.link.len > 0 {
+			cid := image.image.ref.link
 			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${cid}')
-			if !os.exists(tmp_file) {
-				blob := atprotocol.get_blob(feed.post.author.did, cid)!
-				os.write_file(tmp_file, blob)!
-				// image := app.window.ui.gg.create_image_with_size(tmp_file, 200, 125)
-			}
-			aspect_ratio := feed.post.record.embed.images[0].aspect_ratio
-			ratio := match aspect_ratio.width != 0 && aspect_ratio.height != 0 {
-				true { f64(aspect_ratio.height) / f64(aspect_ratio.width) }
+			ratio := match image.aspect_ratio.width != 0 && image.aspect_ratio.height != 0 {
+				true { f64(image.aspect_ratio.height) / f64(image.aspect_ratio.width) }
 				else { 1.0 }
 			}
-			return tmp_file, ratio
+			if !os.exists(tmp_file) {
+				blob := atprotocol.get_blob(feed.post.author.did, cid)!
+				tmp_file_ := tmp_file + '_'
+				os.write_file(tmp_file_, blob)!
+				img1 := stbi.load(tmp_file_)!
+				os.rm(tmp_file_)!
+				width := 200
+				img := stbi.resize_uint8(img1, width, int(width * ratio))!
+				stbi.stbi_write_png(tmp_file, img.width, img.height, img.nr_channels,
+					img.data, img.width * img.nr_channels)!
+			}
+			return tmp_file, image.alt
 		}
 	}
 	return error('no image found')
@@ -248,4 +264,14 @@ fn wrap_text(s string, width int, u &ui.UI) string {
 		wrap += '${line}'
 	}
 	return wrap
+}
+
+fn clear_image_cache() {
+	tmp_dir := os.temp_dir()
+	entries := os.ls(tmp_dir) or { [] }
+	for entry in entries {
+		if entry.starts_with(temp_prefix) {
+			os.rm(os.join_path_single(tmp_dir, entry)) or {}
+		}
+	}
 }

@@ -15,6 +15,7 @@ mut:
 	txt_color             gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
 	txt_color_dim         gx.Color = gx.rgb(0x80, 0x80, 0x80)
 	txt_color_bold        gx.Color = gx.rgb(0xfe, 0xfe, 0xfe)
+	txt_color_link        gx.Color = gx.rgb(0x64, 0x95, 0xed)
 }
 
 fn main() {

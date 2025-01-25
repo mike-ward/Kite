@@ -25,8 +25,8 @@ pub:
 			created_at string @[json: 'createdAt']
 			embed      struct {
 			pub:
-				type   string @[json: '\$type']
-				images []struct {
+				type     string @[json: '\$type']
+				images   []struct {
 				pub:
 					alt          string
 					aspect_ratio struct {
@@ -44,6 +44,11 @@ pub:
 							link string @[json: '\$link']
 						}
 					}
+				}
+				external struct {
+				pub:
+					title string
+					uri   string
 				}
 			}
 		}

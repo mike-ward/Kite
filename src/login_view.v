@@ -67,7 +67,6 @@ fn refresh_session(mut app App) {
 			}
 		}
 		save_settings(app.settings)
-		println('refresh session succeeded')
 	} else {
 		save_settings(Settings{})
 		eprintln(err.msg())

@@ -5,10 +5,10 @@ import net.http
 
 pub struct Timeline {
 pub:
-	feeds []Feed @[json: 'feed']
+	posts []Post @[json: 'feed']
 }
 
-pub struct Feed {
+pub struct Post {
 pub:
 	post   struct {
 	pub:

@@ -22,7 +22,7 @@ fn main() {
 	mut app := &App{}
 	app.settings = load_settings()
 
-	if app.settings.session.access_jwt.len > 0 {
+	if app.settings.is_valid() {
 		refresh_session(mut app)
 	}
 
@@ -37,9 +37,9 @@ fn main() {
 		children:  [
 			ui.column(
 				id:         id_main_column
-				heights:    [ui.stretch, ui.stretch]
-				margin:     ui.Margin{0, 0, 0, 10}
 				scrollview: true
+				margin:     ui.Margin{0, 0, 0, 10}
+				heights:    [ui.stretch, ui.stretch]
 				children:   [login_view, timeline_view]
 			),
 		]

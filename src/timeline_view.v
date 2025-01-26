@@ -1,8 +1,5 @@
-import arrays
 import atprotocol
-import math
 import os
-import regex
 import stbi
 import time
 import ui
@@ -42,42 +39,42 @@ fn update_timeline(mut app App) {
 fn build_timeline(mut app App) {
 	if mut stack := app.window.get[ui.Stack](id_timeline) {
 		text_size := 16
+		text_size_small := text_size - 2
 		text_width := stack.width - 10
 		mut widgets := []ui.Widget{}
 
-		for feed in app.timeline.feeds {
-			mut post := []ui.Widget{cap: 10} // preallocate to avoid resizing
+		for post in app.timeline.posts {
+			mut post_ui := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
-			if mut repost := repost_text(feed) {
-				post << ui.label(
-					text:       wrap_text(repost, text_width, stack.ui)
-					text_size:  text_size - 2
+			if mut repost := repost_text(post) {
+				post_ui << ui.label(
+					text:       format_text(repost, text_width, stack.ui)
+					text_size:  text_size_small
 					text_color: app.txt_color_dim
 				)
 			}
 
-			post << ui.label(
-				text:       head_text(feed, text_width, stack.ui)
+			post_ui << ui.label(
+				text:       author_timestamp_text(post, text_width, stack.ui)
 				text_size:  text_size
 				text_color: app.txt_color_bold
 			)
-			post << ui.label(
-				text:       body_text(feed, text_width, stack.ui)
+			post_ui << ui.label(
+				text:       format_text(post.post.record.text, text_width, stack.ui)
 				text_size:  text_size
 				text_color: app.txt_color
 			)
 
-			if _, title := get_external_link(feed) {
-				post << ui.label(
-					text:       wrap_text(remove_non_ascii(truncate_long_fields(title)),
-						text_width, stack.ui)
-					text_size:  text_size
+			if _, title := external_link(post) {
+				post_ui << ui.label(
+					text:       format_text(title, text_width, stack.ui)
+					text_size:  text_size_small
 					text_color: app.txt_color_link
 				)
 			}
 
-			if image_path, _ := get_post_image(feed) {
-				post << ui.column(
+			if image_path, _ := post_image(post) {
+				post_ui << ui.column(
 					alignment: .center
 					children:  [
 						v_space(),
@@ -85,17 +82,17 @@ fn build_timeline(mut app App) {
 						v_space(),
 					]
 				)
-				post << v_space()
+				post_ui << v_space()
 			}
 
-			post << ui.label(
-				text:       post_counts(feed)
-				text_size:  text_size - 2
+			post_ui << ui.label(
+				text:       post_counts(post)
+				text_size:  text_size_small
 				text_color: app.txt_color_dim
 			)
-			post << v_space()
-			post << h_line(app)
-			widgets << ui.column(children: post)
+			post_ui << v_space()
+			post_ui << h_line(app)
+			widgets << ui.column(children: post_ui)
 		}
 
 		for stack.children.len > 0 {
@@ -113,47 +110,45 @@ fn h_line(app App) ui.Widget {
 	return ui.rectangle(border: true, border_color: app.txt_color_dim)
 }
 
-fn repost_text(feed atprotocol.Feed) !string {
-	if feed.reason.type.contains('Repost') {
-		by := if feed.reason.by.display_name.len > 0 {
-			feed.reason.by.display_name
+fn repost_text(post atprotocol.Post) !string {
+	if post.reason.type.contains('Repost') {
+		by := if post.reason.by.display_name.len > 0 {
+			post.reason.by.display_name
 		} else {
-			feed.reason.by.handle
+			post.reason.by.handle
 		}
-		return remove_non_ascii('reposted by ${by}')
+		return 'reposted by ${by}'
 	}
 	return error('no repost')
 }
 
-fn head_text(feed atprotocol.Feed, width int, u &ui.UI) string {
-	handle := feed.post.author.handle
-	d_name := feed.post.author.display_name
-	author := remove_non_ascii(if d_name.len > 0 { d_name } else { handle })
+fn author_timestamp_text(post atprotocol.Post, width int, u &ui.UI) string {
+	handle := post.post.author.handle
+	d_name := post.post.author.display_name
+	author := if d_name.len > 0 { d_name } else { handle }
 
-	created_at := time.parse_iso8601(feed.post.record.created_at) or { time.utc() }
+	created_at := time.parse_iso8601(post.post.record.created_at) or { time.utc() }
 	time_short := created_at
 		.utc_to_local()
 		.relative_short()
 		.fields()[0]
 	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
-	return wrap_text('${author} • ${time_stamp}', width, u)
+	return format_text('${author} • ${time_stamp}', width, u)
 }
 
-fn body_text(feed atprotocol.Feed, width int, u &ui.UI) string {
-	ascii := remove_non_ascii(truncate_long_fields(feed.post.record.text))
-	return wrap_text(ascii, width, u).trim_space()
-}
-
-fn get_external_link(feed atprotocol.Feed) !(string, string) {
-	return match feed.post.record.embed.external.uri.len > 0 {
-		true { feed.post.record.embed.external.uri, feed.post.record.embed.external.title }
+fn external_link(post atprotocol.Post) !(string, string) {
+	return match post.post.record.embed.external.uri.len > 0 {
+		true { post.post.record.embed.external.uri, post.post.record.embed.external.title }
 		else { error('') }
 	}
 }
 
-fn get_post_image(feed atprotocol.Feed) !(string, string) {
-	if feed.post.record.embed.images.len > 0 {
-		image := feed.post.record.embed.images[0]
+// get_post_image downloads the first image blob assciated with the post
+// and returns the file path where the image is stored and the alt text
+// for that image. Images are resized to reduce memory load.
+fn post_image(post atprotocol.Post) !(string, string) {
+	if post.post.record.embed.images.len > 0 {
+		image := post.post.record.embed.images[0]
 		if image.image.ref.link.len > 0 {
 			cid := image.image.ref.link
 			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${cid}')
@@ -162,13 +157,13 @@ fn get_post_image(feed atprotocol.Feed) !(string, string) {
 				else { 1.0 }
 			}
 			if !os.exists(tmp_file) {
-				blob := atprotocol.get_blob(feed.post.author.did, cid)!
+				blob := atprotocol.get_blob(post.post.author.did, cid)!
 				tmp_file_ := tmp_file + '_'
 				os.write_file(tmp_file_, blob)!
-				img1 := stbi.load(tmp_file_)!
+				img_ := stbi.load(tmp_file_)!
 				os.rm(tmp_file_)!
 				width := 200
-				img := stbi.resize_uint8(img1, width, int(width * ratio))!
+				img := stbi.resize_uint8(img_, width, int(width * ratio))!
 				stbi.stbi_write_png(tmp_file, img.width, img.height, img.nr_channels,
 					img.data, img.width * img.nr_channels)!
 			}
@@ -178,15 +173,15 @@ fn get_post_image(feed atprotocol.Feed) !(string, string) {
 	return error('no image found')
 }
 
-fn post_counts(feed atprotocol.Feed) string {
-	return '• replies ${short_size(feed.post.replies)} ' +
-		'• reposts ${short_size(feed.post.reposts + feed.post.quotes)} ' +
-		'• likes ${short_size(feed.post.likes)}'
+fn post_counts(post atprotocol.Post) string {
+	return '• replies ${short_size(post.post.replies)} ' +
+		'• reposts ${short_size(post.post.reposts + post.post.quotes)} ' +
+		'• likes ${short_size(post.post.likes)}'
 }
 
 fn error_timeline(s string) atprotocol.Timeline {
 	return atprotocol.Timeline{
-		feeds: [
+		posts: [
 			struct {
 				post: struct {
 					author: struct {
@@ -201,69 +196,6 @@ fn error_timeline(s string) atprotocol.Timeline {
 			},
 		]
 	}
-}
-
-fn truncate_long_fields(s string) string {
-	return arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
-		return match true {
-			elem.len > 35 { elem[..20] + '...' }
-			else { elem }
-		}
-	})
-}
-
-fn remove_non_ascii(s string) string {
-	// convert smart quotes to regular quotes
-	s1 := arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
-		return elem
-			.replace('“', '"')
-			.replace('”', '"')
-			.replace('’', "'")
-			.replace('‘', "'")
-			.replace('—', '--')
-	})
-	// strip out non-ascii characters
-	if mut query := regex.regex_opt(r"[^' ',!-~]") {
-		return query.replace(s1, '')
-	}
-	return s1
-}
-
-fn short_size(size int) string {
-	kb := 1000
-	mut sz := f64(size)
-	for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'] {
-		if sz < kb {
-			short := match unit == '' {
-				true { size.str() }
-				else { math.round_sig(sz + .049999, 1).str() }
-			}
-			return '${short}${unit}'
-		}
-		sz /= kb
-	}
-	return size.str()
-}
-
-fn wrap_text(s string, width int, u &ui.UI) string {
-	mut wrap := ''
-	mut line := ''
-	for field in s.fields() {
-		tw, _ := u.dd.text_size(line + ' ' + field)
-		if tw > width {
-			wrap += '${line}\n'
-			line = field
-		} else {
-			if line.len > 0 {
-				line += ' '
-			}
-			line += field
-		}
-	}
-	if line.len > 0 {
-		wrap += '${line}'
-	}
-	return wrap
 }
 
 fn clear_image_cache() {

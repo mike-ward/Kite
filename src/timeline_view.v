@@ -65,11 +65,14 @@ fn build_timeline(mut app App) {
 				text_color: app.txt_color
 			)
 
-			if _, title := external_link(post) {
-				post_ui << ui.label(
+			if link, title := external_link(post) {
+				post_ui << hyperlink(
 					text:       format_text(title, text_width, stack.ui)
 					text_size:  text_size_small
 					text_color: app.txt_color_link
+					on_click:   fn [link] (h &Hyperlink) {
+						os.open_uri(link) or {}
+					}
 				)
 			}
 

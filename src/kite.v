@@ -1,6 +1,7 @@
 import atprotocol
-import ui
 import gx
+import sync
+import ui
 
 const id_main_column = 'main-column'
 
@@ -10,7 +11,9 @@ mut:
 	window                &ui.Window = unsafe { nil }
 	settings              Settings
 	timeline              atprotocol.Timeline
+	timeline_mutex        &sync.RwMutex = sync.new_rwmutex()
 	refresh_session_count int
+	timeline_started      bool
 	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
 	txt_color             gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
 	txt_color_dim         gx.Color = gx.rgb(0x80, 0x80, 0x80)
@@ -50,7 +53,9 @@ fn main() {
 			}
 		}
 		on_resize: fn [mut app] (_ &ui.Window, w int, h int) {
-			build_timeline(mut app)
+			app.timeline_mutex.rlock()
+			build_timeline(app.timeline, mut app)
+			app.timeline_mutex.runlock()
 		}
 	)
 

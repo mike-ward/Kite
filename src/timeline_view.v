@@ -15,42 +15,50 @@ fn create_timeline_view(mut app App) &ui.Widget {
 }
 
 fn start_timeline(mut app App) {
-	clear_image_cache()
-	spawn fn [mut app] () {
-		for {
-			update_timeline(mut app)
-			app.refresh_session_count += 1
-			if app.refresh_session_count % 10 == 0 { // Refresh every 10 minutes
-				refresh_session(mut app)
+	if !app.timeline_started {
+		clear_image_cache()
+		spawn fn [mut app] () {
+			for {
+				update_timeline(mut app)
+				app.refresh_session_count += 1
+				if app.refresh_session_count % 10 == 0 { // Refresh every 10 minutes
+					refresh_session(mut app)
+				}
+				time.sleep(time.minute)
 			}
-			time.sleep(time.minute)
-		}
-	}()
+		}()
+		app.timeline_started = true
+	}
 }
 
 fn update_timeline(mut app App) {
-	app.timeline = app.settings.session.get_timeline() or {
+	timeline := app.settings.session.get_timeline() or {
 		save_settings(Settings{})
 		error_timeline(err.msg())
 	}
-	build_timeline(mut app)
+	app.timeline_mutex.lock()
+	app.timeline = timeline
+	app.timeline_mutex.unlock()
+	build_timeline(timeline, mut app)
 }
 
-fn build_timeline(mut app App) {
+fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	if mut stack := app.window.get[ui.Stack](id_timeline) {
 		text_size := 16
 		text_size_small := text_size - 2
 		text_width := stack.width - 10
+		line_spacing_small := 2
 		mut widgets := []ui.Widget{}
 
-		for post in app.timeline.posts {
+		for post in timeline.posts {
 			mut post_ui := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
 			if mut repost := repost_text(post) {
 				post_ui << link_label(
-					text:       format_text(repost, text_width, stack.ui)
-					text_size:  text_size_small
-					text_color: app.txt_color_dim
+					text:         format_text(repost, text_width, stack.ui)
+					text_size:    text_size_small
+					text_color:   app.txt_color_dim
+					line_spacing: line_spacing_small
 				)
 			}
 
@@ -67,10 +75,11 @@ fn build_timeline(mut app App) {
 
 			if lnk, title := external_link(post) {
 				post_ui << link_label(
-					text:       format_text(title, text_width, stack.ui)
-					text_size:  text_size_small
-					text_color: app.txt_color_link
-					on_click:   fn [lnk] () {
+					text:         format_text(title, text_width, stack.ui)
+					text_size:    text_size_small
+					text_color:   app.txt_color_link
+					line_spacing: line_spacing_small
+					on_click:     fn [lnk] () {
 						os.open_uri(lnk) or { ui.message_box(err.msg()) }
 					}
 				)
@@ -89,9 +98,10 @@ fn build_timeline(mut app App) {
 			}
 
 			post_ui << link_label(
-				text:       post_counts(post)
-				text_size:  text_size_small
-				text_color: app.txt_color_dim
+				text:         post_counts(post)
+				text_size:    text_size_small
+				text_color:   app.txt_color_dim
+				line_spacing: line_spacing_small
 			)
 			post_ui << v_space()
 			post_ui << h_line(app)

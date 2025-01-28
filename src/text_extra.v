@@ -45,12 +45,13 @@ fn short_size(size int) string {
 	return size.str()
 }
 
-fn wrap_text(s string, width int, u &ui.UI) string {
+fn wrap_text(s string, width_dpi int, mut dtw ui.DrawTextWidget) string {
 	mut wrap := ''
 	mut line := ''
+	dtw.load_style()
 	for field in s.fields() {
-		tw, _ := u.dd.text_size(line + ' ' + field)
-		if tw > width {
+		tw := dtw.text_width(line + ' ' + field)
+		if tw > width_dpi {
 			wrap += '${line}\n'
 			line = field
 		} else {
@@ -64,10 +65,4 @@ fn wrap_text(s string, width int, u &ui.UI) string {
 		wrap += line
 	}
 	return wrap
-}
-
-fn format_text(s string, width int, u &ui.UI) string {
-	t := truncate_long_fields(s)
-	a := remove_non_ascii(t)
-	return wrap_text(a, width, u)
 }

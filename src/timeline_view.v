@@ -44,7 +44,7 @@ fn update_timeline(mut app App) {
 
 fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	if mut stack := app.window.get[ui.Stack](id_timeline) {
-		text_size := 16
+		text_size := 17
 		text_size_small := text_size - 2
 		text_width := stack.width - 10
 		line_spacing_small := 2
@@ -55,31 +55,35 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 
 			if mut repost := repost_text(post) {
 				post_ui << link_label(
-					text:         format_text(repost, text_width, stack.ui)
-					text_size:    text_size_small
-					text_color:   app.txt_color_dim
-					line_spacing: line_spacing_small
+					text:           remove_non_ascii(truncate_long_fields(repost))
+					text_size:      text_size_small
+					text_color:     app.txt_color_dim
+					wrap_width_dpi: text_width
+					line_spacing:   line_spacing_small
 				)
 			}
 
 			post_ui << link_label(
-				text:       author_timestamp_text(post, text_width, stack.ui)
-				text_size:  text_size
-				text_color: app.txt_color_bold
+				text:           author_timestamp_text(post)
+				text_size:      text_size
+				text_color:     app.txt_color_bold
+				wrap_width_dpi: text_width
 			)
 			post_ui << link_label(
-				text:       format_text(post.post.record.text, text_width, stack.ui)
-				text_size:  text_size
-				text_color: app.txt_color
+				text:           post.post.record.text
+				text_size:      text_size
+				text_color:     app.txt_color
+				wrap_width_dpi: text_width
 			)
 
 			if lnk, title := external_link(post) {
 				post_ui << link_label(
-					text:         format_text(title, text_width, stack.ui)
-					text_size:    text_size_small
-					text_color:   app.txt_color_link
-					line_spacing: line_spacing_small
-					on_click:     fn [lnk] () {
+					text:           remove_non_ascii(truncate_long_fields(title))
+					text_size:      text_size_small
+					text_color:     app.txt_color_link
+					wrap_width_dpi: text_width
+					line_spacing:   line_spacing_small
+					on_click:       fn [lnk] () {
 						os.open_uri(lnk) or { ui.message_box(err.msg()) }
 					}
 				)
@@ -98,10 +102,11 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			}
 
 			post_ui << link_label(
-				text:         post_counts(post)
-				text_size:    text_size_small
-				text_color:   app.txt_color_dim
-				line_spacing: line_spacing_small
+				text:           post_counts(post)
+				text_size:      text_size_small
+				text_color:     app.txt_color_dim
+				wrap_width_dpi: text_width
+				line_spacing:   line_spacing_small
 			)
 			post_ui << v_space()
 			post_ui << h_line(app)
@@ -135,7 +140,7 @@ fn repost_text(post atprotocol.Post) !string {
 	return error('no repost')
 }
 
-fn author_timestamp_text(post atprotocol.Post, width int, u &ui.UI) string {
+fn author_timestamp_text(post atprotocol.Post) string {
 	handle := post.post.author.handle
 	d_name := post.post.author.display_name
 	author := remove_non_ascii(if d_name.len > 0 { d_name } else { handle })
@@ -146,7 +151,7 @@ fn author_timestamp_text(post atprotocol.Post, width int, u &ui.UI) string {
 		.relative_short()
 		.fields()[0]
 	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
-	return wrap_text(truncate_long_fields('${author} • ${time_stamp}'), width, u)
+	return truncate_long_fields('${author} • ${time_stamp}')
 }
 
 fn external_link(post atprotocol.Post) !(string, string) {

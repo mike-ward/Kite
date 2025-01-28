@@ -47,31 +47,31 @@ fn build_timeline(mut app App) {
 			mut post_ui := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
 			if mut repost := repost_text(post) {
-				post_ui << ui.label(
+				post_ui << link_label(
 					text:       format_text(repost, text_width, stack.ui)
 					text_size:  text_size_small
 					text_color: app.txt_color_dim
 				)
 			}
 
-			post_ui << ui.label(
+			post_ui << link_label(
 				text:       author_timestamp_text(post, text_width, stack.ui)
 				text_size:  text_size
 				text_color: app.txt_color_bold
 			)
-			post_ui << ui.label(
+			post_ui << link_label(
 				text:       format_text(post.post.record.text, text_width, stack.ui)
 				text_size:  text_size
 				text_color: app.txt_color
 			)
 
-			if link, title := external_link(post) {
-				post_ui << hyperlink(
+			if lnk, title := external_link(post) {
+				post_ui << link_label(
 					text:       format_text(title, text_width, stack.ui)
 					text_size:  text_size_small
 					text_color: app.txt_color_link
-					on_click:   fn [link] (h &Hyperlink) {
-						os.open_uri(link) or {}
+					on_click:   fn [lnk] () {
+						os.open_uri(lnk) or { ui.message_box(err.msg()) }
 					}
 				)
 			}
@@ -88,7 +88,7 @@ fn build_timeline(mut app App) {
 				post_ui << v_space()
 			}
 
-			post_ui << ui.label(
+			post_ui << link_label(
 				text:       post_counts(post)
 				text_size:  text_size_small
 				text_color: app.txt_color_dim
@@ -128,7 +128,7 @@ fn repost_text(post atprotocol.Post) !string {
 fn author_timestamp_text(post atprotocol.Post, width int, u &ui.UI) string {
 	handle := post.post.author.handle
 	d_name := post.post.author.display_name
-	author := if d_name.len > 0 { d_name } else { handle }
+	author := remove_non_ascii(if d_name.len > 0 { d_name } else { handle })
 
 	created_at := time.parse_iso8601(post.post.record.created_at) or { time.utc() }
 	time_short := created_at
@@ -136,7 +136,7 @@ fn author_timestamp_text(post atprotocol.Post, width int, u &ui.UI) string {
 		.relative_short()
 		.fields()[0]
 	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
-	return format_text('${author} • ${time_stamp}', width, u)
+	return wrap_text(truncate_long_fields('${author} • ${time_stamp}'), width, u)
 }
 
 fn external_link(post atprotocol.Post) !(string, string) {

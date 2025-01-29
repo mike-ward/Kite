@@ -47,11 +47,10 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		text_size := 17
 		text_size_small := text_size - 2
 		line_spacing_small := 2
-		mut widgets := []ui.Widget{}
-		widgets << v_space()
+		mut widgets := []ui.Widget{cap: timeline.posts.len + 1}
 
 		for post in timeline.posts {
-			mut post_ui := []ui.Widget{cap: 10} // preallocate to avoid resizing
+			mut post_ui := []ui.Widget{cap: 10}
 
 			if mut repost := repost_text(post) {
 				post_ui << link_label(
@@ -61,7 +60,6 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 					line_spacing: line_spacing_small
 					word_wrap:    true
 				)
-				post_ui << v_space()
 			}
 
 			post_ui << link_label(
@@ -70,7 +68,6 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				text_color: app.txt_color_bold
 				word_wrap:  true
 			)
-			post_ui << v_space()
 
 			record_text := sanitize_text(post.post.record.text)
 			if record_text.len > 0 {
@@ -80,7 +77,6 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 					text_color: app.txt_color
 					word_wrap:  true
 				)
-				post_ui << v_space()
 			}
 
 			if lnk, title := external_link(post) {
@@ -94,10 +90,10 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 						os.open_uri(lnk) or { ui.message_box(err.msg()) }
 					}
 				)
-				post_ui << v_space()
 			}
 
 			if image_path, _ := post_image(post) {
+				post_ui << v_space()
 				post_ui << ui.column(
 					alignment: .center
 					children:  [
@@ -106,7 +102,6 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 						v_space(),
 					]
 				)
-				post_ui << v_space()
 			}
 
 			post_ui << link_label(
@@ -116,21 +111,24 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				line_spacing: line_spacing_small
 				word_wrap:    true
 			)
-			post_ui << v_space()
+
 			post_ui << v_space()
 			post_ui << h_line(app)
-			widgets << ui.column(children: post_ui)
+			widgets << ui.column(
+				spacing:  5
+				children: post_ui
+			)
 		}
 
 		for stack.children.len > 0 {
-			stack.remove()
+			stack.remove(at: -1)
 		}
 		stack.add(children: widgets)
 	}
 }
 
 fn v_space() ui.Widget {
-	return ui.rectangle(height: 5)
+	return ui.rectangle(height: 0)
 }
 
 fn h_line(app App) ui.Widget {

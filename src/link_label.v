@@ -137,18 +137,19 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 	if ll.adj_width == 0 || ll.adj_height == 0 {
 		mut dtw := ui.DrawTextWidget(ll)
 		dtw.load_style()
+		line_height := dtw.text_height('W') + ll.line_spacing
 		mut w := 0
 		mut h := 0
 		if !ll.text.contains('\n') {
 			w = dtw.text_width(ll.text)
-			h = dtw.text_height('W') + ll.line_spacing
+			h = line_height
 		} else {
 			for line in ll.text.split('\n') {
 				wi := dtw.text_width(line)
 				if wi > w {
 					w = wi
 				}
-				h += dtw.text_height('W') + ll.line_spacing
+				h += line_height
 			}
 		}
 		ll.adj_width = w

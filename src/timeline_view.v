@@ -46,7 +46,6 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	if mut stack := app.window.get[ui.Stack](id_timeline) {
 		text_size := 17
 		text_size_small := text_size - 2
-		text_width := stack.width - 10
 		line_spacing_small := 2
 		mut widgets := []ui.Widget{}
 
@@ -55,35 +54,35 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 
 			if mut repost := repost_text(post) {
 				post_ui << link_label(
-					text:           remove_non_ascii(truncate_long_fields(repost))
-					text_size:      text_size_small
-					text_color:     app.txt_color_dim
-					wrap_width_dpi: text_width
-					line_spacing:   line_spacing_small
+					text:         remove_non_ascii(truncate_long_fields(repost))
+					text_size:    text_size_small
+					text_color:   app.txt_color_dim
+					word_wrap:    true
+					line_spacing: line_spacing_small
 				)
 			}
 
 			post_ui << link_label(
-				text:           author_timestamp_text(post)
-				text_size:      text_size
-				text_color:     app.txt_color_bold
-				wrap_width_dpi: text_width
+				text:       author_timestamp_text(post)
+				text_size:  text_size
+				text_color: app.txt_color_bold
+				word_wrap:  true
 			)
 			post_ui << link_label(
-				text:           post.post.record.text
-				text_size:      text_size
-				text_color:     app.txt_color
-				wrap_width_dpi: text_width
+				text:       remove_non_ascii(truncate_long_fields(post.post.record.text))
+				text_size:  text_size
+				text_color: app.txt_color
+				word_wrap:  true
 			)
 
 			if lnk, title := external_link(post) {
 				post_ui << link_label(
-					text:           remove_non_ascii(truncate_long_fields(title))
-					text_size:      text_size_small
-					text_color:     app.txt_color_link
-					wrap_width_dpi: text_width
-					line_spacing:   line_spacing_small
-					on_click:       fn [lnk] () {
+					text:         remove_non_ascii(truncate_long_fields(title))
+					text_size:    text_size_small
+					text_color:   app.txt_color_link
+					word_wrap:    true
+					line_spacing: line_spacing_small
+					on_click:     fn [lnk] () {
 						os.open_uri(lnk) or { ui.message_box(err.msg()) }
 					}
 				)
@@ -102,11 +101,11 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			}
 
 			post_ui << link_label(
-				text:           post_counts(post)
-				text_size:      text_size_small
-				text_color:     app.txt_color_dim
-				wrap_width_dpi: text_width
-				line_spacing:   line_spacing_small
+				text:         post_counts(post)
+				text_size:    text_size_small
+				text_color:   app.txt_color_dim
+				word_wrap:    true
+				line_spacing: line_spacing_small
 			)
 			post_ui << v_space()
 			post_ui << h_line(app)

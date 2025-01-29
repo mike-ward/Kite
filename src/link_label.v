@@ -4,15 +4,15 @@ const line_spacing_default = 5
 
 struct LinkLabel {
 mut:
-	text           string
-	adj_width      int
-	adj_height     int
-	theme_style    string
-	style          ui.LabelStyle
-	style_params   ui.LabelStyleParams
-	line_spacing   int   = line_spacing_default
-	on_click       fn () = unsafe { nil }
-	wrap_width_dpi int // implies word wrapping text
+	text         string
+	adj_width    int
+	adj_height   int
+	theme_style  string
+	style        ui.LabelStyle
+	style_params ui.LabelStyleParams
+	line_spacing int   = line_spacing_default
+	on_click     fn () = unsafe { nil }
+	word_wrap    bool
 	// DrawTextWidget interface
 	text_styles ui.TextStyles
 	// Widget interface
@@ -32,32 +32,32 @@ mut:
 
 struct LinkLabelParams {
 	ui.LabelStyleParams
-	id             string
-	width          int
-	height         int
-	z_index        int
-	clipping       bool
-	justify        []f64 = [0.0, 0.0]
-	text           string
-	theme          string = ui.no_style
-	line_spacing   int    = line_spacing_default
-	on_click       fn ()  = unsafe { nil }
-	wrap_width_dpi int
+	id           string
+	width        int
+	height       int
+	z_index      int
+	clipping     bool
+	justify      []f64 = [0.0, 0.0]
+	text         string
+	theme        string = ui.no_style
+	line_spacing int    = line_spacing_default
+	on_click     fn ()  = unsafe { nil }
+	word_wrap    bool
 }
 
 fn link_label(c LinkLabelParams) &LinkLabel {
 	mut ll := &LinkLabel{
-		id:             c.id
-		text:           c.text
-		width:          c.width
-		height:         c.height
-		ui:             unsafe { nil }
-		z_index:        c.z_index
-		clipping:       c.clipping
-		style_params:   c.LabelStyleParams
-		line_spacing:   c.line_spacing
-		on_click:       c.on_click
-		wrap_width_dpi: c.wrap_width_dpi
+		id:           c.id
+		text:         c.text
+		width:        c.width
+		height:       c.height
+		ui:           unsafe { nil }
+		z_index:      c.z_index
+		clipping:     c.clipping
+		style_params: c.LabelStyleParams
+		line_spacing: c.line_spacing
+		on_click:     c.on_click
+		word_wrap:    c.word_wrap
 	}
 	ll.style_params.style = c.theme
 	return ll
@@ -67,9 +67,10 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 	ll.parent = parent
 	ll.ui = parent.get_ui()
 	ll.load_style()
-	if ll.wrap_width_dpi > 0 {
+	if ll.word_wrap {
 		mut dtw := ui.DrawTextWidget(ll)
-		ll.text = wrap_text(ll.text, ll.wrap_width_dpi, mut dtw)
+		mut w, _ := parent.size()
+		ll.text = wrap_text(ll.text, w - 10, mut dtw)
 	}
 	ll.init_size()
 	if ll.on_click != unsafe { nil } {

@@ -48,18 +48,20 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		text_size_small := text_size - 2
 		line_spacing_small := 2
 		mut widgets := []ui.Widget{}
+		widgets << v_space()
 
 		for post in timeline.posts {
 			mut post_ui := []ui.Widget{cap: 10} // preallocate to avoid resizing
 
 			if mut repost := repost_text(post) {
 				post_ui << link_label(
-					text:         remove_non_ascii(truncate_long_fields(repost))
+					text:         sanitize_text(repost)
 					text_size:    text_size_small
 					text_color:   app.txt_color_dim
-					word_wrap:    true
 					line_spacing: line_spacing_small
+					word_wrap:    true
 				)
+				post_ui << v_space()
 			}
 
 			post_ui << link_label(
@@ -68,24 +70,31 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				text_color: app.txt_color_bold
 				word_wrap:  true
 			)
-			post_ui << link_label(
-				text:       remove_non_ascii(truncate_long_fields(post.post.record.text))
-				text_size:  text_size
-				text_color: app.txt_color
-				word_wrap:  true
-			)
+			post_ui << v_space()
+
+			record_text := sanitize_text(post.post.record.text)
+			if record_text.len > 0 {
+				post_ui << link_label(
+					text:       record_text
+					text_size:  text_size
+					text_color: app.txt_color
+					word_wrap:  true
+				)
+				post_ui << v_space()
+			}
 
 			if lnk, title := external_link(post) {
 				post_ui << link_label(
-					text:         remove_non_ascii(truncate_long_fields(title))
+					text:         sanitize_text(title)
 					text_size:    text_size_small
 					text_color:   app.txt_color_link
-					word_wrap:    true
 					line_spacing: line_spacing_small
+					word_wrap:    true
 					on_click:     fn [lnk] () {
 						os.open_uri(lnk) or { ui.message_box(err.msg()) }
 					}
 				)
+				post_ui << v_space()
 			}
 
 			if image_path, _ := post_image(post) {
@@ -104,9 +113,10 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				text:         post_counts(post)
 				text_size:    text_size_small
 				text_color:   app.txt_color_dim
-				word_wrap:    true
 				line_spacing: line_spacing_small
+				word_wrap:    true
 			)
+			post_ui << v_space()
 			post_ui << v_space()
 			post_ui << h_line(app)
 			widgets << ui.column(children: post_ui)
@@ -124,7 +134,10 @@ fn v_space() ui.Widget {
 }
 
 fn h_line(app App) ui.Widget {
-	return ui.rectangle(border: true, border_color: app.txt_color_dim)
+	return ui.rectangle(
+		border:       true
+		border_color: app.txt_color_dim
+	)
 }
 
 fn repost_text(post atprotocol.Post) !string {
@@ -154,8 +167,9 @@ fn author_timestamp_text(post atprotocol.Post) string {
 }
 
 fn external_link(post atprotocol.Post) !(string, string) {
-	return match post.post.record.embed.external.uri.len > 0 {
-		true { post.post.record.embed.external.uri, post.post.record.embed.external.title }
+	external := post.post.record.embed.external
+	return match external.uri.len > 0 && external.title.trim_space().len > 0 {
+		true { external.uri, external.title.trim_space() }
 		else { error('') }
 	}
 }

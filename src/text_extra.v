@@ -29,6 +29,19 @@ fn remove_non_ascii(s string) string {
 	return s1
 }
 
+fn remove_www_links(s string) string {
+	if mut query := regex.regex_opt(r'www\.\S+') {
+		return query.replace(s, '')
+	}
+	return s
+}
+
+fn sanitize_text(s string) string {
+	l := remove_www_links(s)
+	t := truncate_long_fields(l)
+	return remove_non_ascii(t)
+}
+
 fn short_size(size int) string {
 	kb := 1000
 	mut sz := f64(size)
@@ -49,7 +62,8 @@ fn wrap_text(s string, width_dpi int, mut dtw ui.DrawTextWidget) string {
 	mut wrap := ''
 	mut line := ''
 	dtw.load_style()
-	for field in s.fields() {
+	ss := s.replace('\n', ' ')
+	for field in ss.fields() {
 		tw := dtw.text_width(line + ' ' + field)
 		if tw > width_dpi {
 			wrap += '${line}\n'
@@ -61,6 +75,7 @@ fn wrap_text(s string, width_dpi int, mut dtw ui.DrawTextWidget) string {
 			line += field
 		}
 	}
+	line = line.trim_space()
 	if line.len > 0 {
 		wrap += line
 	}

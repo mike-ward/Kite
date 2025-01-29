@@ -141,14 +141,14 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 		mut h := 0
 		if !ll.text.contains('\n') {
 			w = dtw.text_width(ll.text)
-			h = dtw.current_style().size + ll.line_spacing
+			h = dtw.text_height('W') + ll.line_spacing
 		} else {
 			for line in ll.text.split('\n') {
-				wi, he := dtw.text_size(line)
+				wi := dtw.text_width(line)
 				if wi > w {
 					w = wi
 				}
-				h += he + ll.line_spacing
+				h += dtw.text_height('W') + ll.line_spacing
 			}
 		}
 		ll.adj_width = w

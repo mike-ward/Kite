@@ -5,7 +5,6 @@ import time
 import ui
 
 const id_timeline = 'timeline'
-const error_title = 'kite error'
 const temp_prefix = 'kite_image'
 
 fn create_timeline_view(mut app App) &ui.Widget {
@@ -34,7 +33,7 @@ fn start_timeline(mut app App) {
 fn update_timeline(mut app App) {
 	timeline := app.settings.session.get_timeline() or {
 		save_settings(Settings{})
-		error_timeline(err.msg())
+		atprotocol.error_timeline(err.msg())
 	}
 	app.timeline_mutex.lock()
 	app.timeline = timeline
@@ -208,33 +207,14 @@ fn post_counts(post atprotocol.Post) string {
 		'• likes ${short_size(post.post.likes)}'
 }
 
-fn error_timeline(s string) atprotocol.Timeline {
-	return atprotocol.Timeline{
-		posts: [
-			struct {
-				post: struct {
-					author: struct {
-						handle:       error_title
-						display_name: error_title
-					}
-					record: struct {
-						text:       s
-						created_at: time.now().format_rfc3339()
-					}
-				}
-			},
-		]
-	}
-}
-
 fn clear_image_cache() {
 	tmp_dir := os.temp_dir()
 	entries := os.ls(tmp_dir) or { [] }
 	for entry in entries {
 		if entry.starts_with(temp_prefix) {
 			path := os.join_path_single(tmp_dir, entry)
-			stat := os.lstat(path) or { continue }
-			date := time.unix(stat.atime)
+			last := os.file_last_mod_unix(path)
+			date := time.unix(last)
 			diff := time.utc() - date
 			if diff > time.hour {
 				os.rm(path) or {}

@@ -1,6 +1,7 @@
 import atprotocol
 import gx
 import sync
+import time
 import ui
 
 const id_main_column = 'main-column'
@@ -32,6 +33,12 @@ fn main() {
 	login_view := create_login_view(mut app)
 	timeline_view := create_timeline_view(mut app)
 
+	build_timeline_debounced := debounce(fn [mut app] () {
+		app.timeline_mutex.rlock()
+		build_timeline(app.timeline, mut app)
+		app.timeline_mutex.runlock()
+	}, time.millisecond * 400)
+
 	app.window = ui.window(
 		height:    app.settings.height
 		width:     app.settings.width
@@ -52,10 +59,8 @@ fn main() {
 				start_timeline(mut app)
 			}
 		}
-		on_resize: fn [mut app] (_ &ui.Window, w int, h int) {
-			app.timeline_mutex.rlock()
-			build_timeline(app.timeline, mut app)
-			app.timeline_mutex.runlock()
+		on_resize: fn [build_timeline_debounced] (_ &ui.Window, w int, h int) {
+			build_timeline_debounced()
 		}
 	)
 

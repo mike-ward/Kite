@@ -2,6 +2,9 @@ module atprotocol
 
 import json
 import net.http
+import time
+
+const error_title = 'kite error'
 
 pub struct Timeline {
 pub:
@@ -80,5 +83,24 @@ pub fn (session Session) get_timeline() !Timeline {
 	return match response.status() {
 		.ok { json.decode(Timeline, response.body) }
 		else { error(response.body) }
+	}
+}
+
+pub fn error_timeline(s string) Timeline {
+	return Timeline{
+		posts: [
+			struct {
+				post: struct {
+					author: struct {
+						handle:       error_title
+						display_name: error_title
+					}
+					record: struct {
+						text:       s
+						created_at: time.now().format_rfc3339()
+					}
+				}
+			},
+		]
 	}
 }

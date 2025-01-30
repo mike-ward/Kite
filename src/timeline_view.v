@@ -232,7 +232,12 @@ fn clear_image_cache() {
 	entries := os.ls(tmp_dir) or { [] }
 	for entry in entries {
 		if entry.starts_with(temp_prefix) {
-			os.rm(os.join_path_single(tmp_dir, entry)) or {}
+			path := os.join_path_single(tmp_dir, entry)
+			stat := os.lstat(path) or { continue }
+			date := time.unix(stat.atime)
+			if time.since(date) > time.hour {
+				os.rm(path) or {}
+			}
 		}
 	}
 }

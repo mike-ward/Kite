@@ -191,7 +191,7 @@ fn post_image(post atprotocol.Post) !(string, string) {
 				os.write_file(tmp_file_, blob)!
 				img_ := stbi.load(tmp_file_)!
 				os.rm(tmp_file_)!
-				width := 200
+				width := 215 // any bigger and images take up too much vertical space
 				img := stbi.resize_uint8(img_, width, int(width * ratio))!
 				stbi.stbi_write_png(tmp_file, img.width, img.height, img.nr_channels,
 					img.data, img.width * img.nr_channels)!
@@ -235,7 +235,8 @@ fn clear_image_cache() {
 			path := os.join_path_single(tmp_dir, entry)
 			stat := os.lstat(path) or { continue }
 			date := time.unix(stat.atime)
-			if time.since(date) > time.hour {
+			diff := time.utc() - date
+			if diff > time.hour {
 				os.rm(path) or {}
 			}
 		}

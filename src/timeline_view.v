@@ -36,9 +36,6 @@ fn update_timeline(mut app App) {
 		save_settings(Settings{})
 		atprotocol.error_timeline(err.msg())
 	}
-	app.timeline_mutex.lock()
-	app.timeline = timeline
-	app.timeline_mutex.unlock()
 	build_timeline(timeline, mut app)
 }
 

@@ -1,5 +1,6 @@
 import extra
 import ui
+import math
 
 const line_spacing_default = 5
 
@@ -68,12 +69,7 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 	ll.parent = parent
 	ll.ui = parent.get_ui()
 	ll.load_style()
-	if ll.word_wrap {
-		mut dtw := ui.DrawTextWidget(ll)
-		mut w, _ := parent.size()
-		ll.text = extra.wrap_text(ll.text, w - 10, mut dtw)
-	}
-	ll.init_size()
+	ll.set_size()
 	if ll.on_click != unsafe { nil } {
 		mut subscriber := parent.get_subscriber()
 		subscriber.subscribe_method(ui.events.on_click, btn_click, ll)
@@ -88,8 +84,8 @@ fn (mut ll LinkLabel) cleanup() {
 }
 
 fn btn_click(mut ll LinkLabel, e &ui.MouseEvent, w &ui.Window) {
-	if ll.point_inside(e.x, e.y) {
-		if ll.on_click != unsafe { nil } {
+	if ll.on_click != unsafe { nil } {
+		if ll.point_inside(e.x, e.y) {
 			ll.on_click()
 		}
 	}
@@ -101,9 +97,8 @@ fn (mut ll LinkLabel) set_pos(x int, y int) {
 }
 
 fn (mut ll LinkLabel) propose_size(w int, h int) (int, int) {
-	ll.width = w
-	ll.height = h
-	return w, h
+	ll.set_size()
+	return ll.width, ll.height
 }
 
 fn (mut ll LinkLabel) size() (int, int) {
@@ -134,39 +129,33 @@ fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
 
 // ---------
 
-fn (mut ll LinkLabel) adj_size() (int, int) {
-	if ll.adj_width == 0 || ll.adj_height == 0 {
+fn (mut ll LinkLabel) set_size() {
+	if ll.word_wrap {
 		mut dtw := ui.DrawTextWidget(ll)
-		dtw.load_style()
-		line_height := dtw.text_height('W') + ll.line_spacing
-		mut w := 0
-		mut h := 0
-		if !ll.text.contains('\n') {
-			w = dtw.text_width(ll.text)
-			h = line_height
-		} else {
-			for line in ll.text.split('\n') {
-				wi := dtw.text_width(line)
-				if wi > w {
-					w = wi
-				}
-				h += line_height
-			}
-		}
-		ll.adj_width = w
-		ll.adj_height = h
+		mut wp, _ := ll.parent.size()
+		ll.text = extra.wrap_text(ll.text, wp - 10, mut dtw)
 	}
-	return ll.adj_width, ll.adj_height
+	ll.width, ll.height = ll.adj_size()
 }
 
-fn (mut ll LinkLabel) init_size() {
-	w, h := ll.adj_size()
-	if ll.width == 0 {
-		ll.width = w
+fn (mut ll LinkLabel) adj_size() (int, int) {
+	mut dtw := ui.DrawTextWidget(ll)
+	dtw.load_style()
+	line_height := dtw.text_height('W') + ll.line_spacing
+	mut w := 0
+	mut h := 0
+	if ll.text.contains('\n') {
+		for line in ll.text.split('\n') {
+			w = math.max(dtw.text_width(line), w)
+			h += line_height
+		}
+	} else {
+		w = dtw.text_width(ll.text)
+		h = line_height
 	}
-	if ll.height == 0 {
-		ll.height = h
-	}
+	ll.adj_width = w
+	ll.adj_height = h
+	return ll.adj_width, ll.adj_height
 }
 
 fn (mut ll LinkLabel) load_style() {

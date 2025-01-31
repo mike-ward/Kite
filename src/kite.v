@@ -1,9 +1,4 @@
-import atprotocol
-import extra
-// ---
 import gx
-import sync
-import time
 import ui
 
 const id_main_column = 'main-column'
@@ -13,8 +8,6 @@ struct App {
 mut:
 	window                &ui.Window = unsafe { nil }
 	settings              Settings
-	timeline              atprotocol.Timeline
-	timeline_mutex        &sync.RwMutex = sync.new_rwmutex()
 	refresh_session_count int
 	timeline_started      bool
 	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
@@ -35,18 +28,12 @@ fn main() {
 	login_view := create_login_view(mut app)
 	timeline_view := create_timeline_view(mut app)
 
-	build_timeline_debounced := extra.debounce(fn [mut app] () {
-		app.timeline_mutex.rlock()
-		build_timeline(app.timeline, mut app)
-		app.timeline_mutex.runlock()
-	}, time.millisecond * 400)
-
 	app.window = ui.window(
-		height:    app.settings.height
-		width:     app.settings.width
-		title:     'Kite'
-		bg_color:  app.bg_color
-		children:  [
+		height:   app.settings.height
+		width:    app.settings.width
+		title:    'Kite'
+		bg_color: app.bg_color
+		children: [
 			ui.column(
 				id:         id_main_column
 				scrollview: true
@@ -55,14 +42,11 @@ fn main() {
 				children:   [login_view, timeline_view]
 			),
 		]
-		on_init:   fn [mut app] (_ &ui.Window) {
+		on_init:  fn [mut app] (_ &ui.Window) {
 			if app.settings.is_valid() {
 				remove_login_view(mut app)
 				start_timeline(mut app)
 			}
-		}
-		on_resize: fn [build_timeline_debounced] (_ &ui.Window, w int, h int) {
-			build_timeline_debounced()
 		}
 	)
 

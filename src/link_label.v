@@ -1,3 +1,4 @@
+import extra
 import ui
 
 const line_spacing_default = 5
@@ -70,7 +71,7 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 	if ll.word_wrap {
 		mut dtw := ui.DrawTextWidget(ll)
 		mut w, _ := parent.size()
-		ll.text = wrap_text(ll.text, w - 10, mut dtw)
+		ll.text = extra.wrap_text(ll.text, w - 10, mut dtw)
 	}
 	ll.init_size()
 	if ll.on_click != unsafe { nil } {

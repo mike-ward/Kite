@@ -1,9 +1,11 @@
+module extra
+
 import arrays
 import regex
 import math
 import ui
 
-fn truncate_long_fields(s string) string {
+pub fn truncate_long_fields(s string) string {
 	return arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
 		return match true {
 			elem.len > 35 { elem[..20] + '...' }
@@ -12,7 +14,7 @@ fn truncate_long_fields(s string) string {
 	})
 }
 
-fn remove_non_ascii(s string) string {
+pub fn remove_non_ascii(s string) string {
 	// convert smart quotes to regular quotes
 	s1 := arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
 		return elem
@@ -29,20 +31,20 @@ fn remove_non_ascii(s string) string {
 	return s1
 }
 
-fn remove_www_links(s string) string {
+pub fn remove_www_links(s string) string {
 	if mut query := regex.regex_opt(r'www\.\S+') {
 		return query.replace(s, '')
 	}
 	return s
 }
 
-fn sanitize_text(s string) string {
+pub fn sanitize_text(s string) string {
 	l := remove_www_links(s)
 	t := truncate_long_fields(l)
 	return remove_non_ascii(t)
 }
 
-fn short_size(size int) string {
+pub fn short_size(size int) string {
 	kb := 1000
 	mut sz := f64(size)
 	for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'] {
@@ -58,7 +60,7 @@ fn short_size(size int) string {
 	return size.str()
 }
 
-fn wrap_text(s string, width_dpi int, mut dtw ui.DrawTextWidget) string {
+pub fn wrap_text(s string, width_dpi int, mut dtw ui.DrawTextWidget) string {
 	mut wrap := ''
 	mut line := ''
 	dtw.load_style()

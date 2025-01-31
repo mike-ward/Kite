@@ -1,4 +1,6 @@
 import atprotocol
+import extra
+// ---
 import gx
 import sync
 import time
@@ -33,7 +35,7 @@ fn main() {
 	login_view := create_login_view(mut app)
 	timeline_view := create_timeline_view(mut app)
 
-	build_timeline_debounced := debounce(fn [mut app] () {
+	build_timeline_debounced := extra.debounce(fn [mut app] () {
 		app.timeline_mutex.rlock()
 		build_timeline(app.timeline, mut app)
 		app.timeline_mutex.runlock()

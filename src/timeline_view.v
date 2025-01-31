@@ -1,4 +1,5 @@
 import atprotocol
+import extra
 import os
 import stbi
 import time
@@ -7,13 +8,13 @@ import ui
 const id_timeline = 'timeline'
 const temp_prefix = 'kite_image'
 
-fn create_timeline_view(mut app App) &ui.Widget {
+pub fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
 		id: id_timeline
 	)
 }
 
-fn start_timeline(mut app App) {
+pub fn start_timeline(mut app App) {
 	if !app.timeline_started {
 		clear_image_cache()
 		spawn fn [mut app] () {
@@ -41,7 +42,7 @@ fn update_timeline(mut app App) {
 	build_timeline(timeline, mut app)
 }
 
-fn build_timeline(timeline atprotocol.Timeline, mut app App) {
+pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	if mut stack := app.window.get[ui.Stack](id_timeline) {
 		text_size := 17
 		text_size_small := text_size - 2
@@ -53,7 +54,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 
 			if mut repost := repost_text(post) {
 				post_ui << link_label(
-					text:         sanitize_text(repost)
+					text:         extra.sanitize_text(repost)
 					text_size:    text_size_small
 					text_color:   app.txt_color_dim
 					line_spacing: line_spacing_small
@@ -68,7 +69,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				word_wrap:  true
 			)
 
-			record_text := sanitize_text(post.post.record.text)
+			record_text := extra.sanitize_text(post.post.record.text)
 			if record_text.len > 0 {
 				post_ui << link_label(
 					text:       record_text
@@ -80,7 +81,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 
 			if lnk, title := external_link(post) {
 				post_ui << link_label(
-					text:         sanitize_text(title)
+					text:         extra.sanitize_text(title)
 					text_size:    text_size_small
 					text_color:   app.txt_color_link
 					line_spacing: line_spacing_small
@@ -152,7 +153,7 @@ fn repost_text(post atprotocol.Post) !string {
 fn author_timestamp_text(post atprotocol.Post) string {
 	handle := post.post.author.handle
 	d_name := post.post.author.display_name
-	author := remove_non_ascii(if d_name.len > 0 { d_name } else { handle })
+	author := extra.remove_non_ascii(if d_name.len > 0 { d_name } else { handle })
 
 	created_at := time.parse_iso8601(post.post.record.created_at) or { time.utc() }
 	time_short := created_at
@@ -160,7 +161,7 @@ fn author_timestamp_text(post atprotocol.Post) string {
 		.relative_short()
 		.fields()[0]
 	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
-	return truncate_long_fields('${author} • ${time_stamp}')
+	return extra.truncate_long_fields('${author} • ${time_stamp}')
 }
 
 fn external_link(post atprotocol.Post) !(string, string) {
@@ -202,9 +203,9 @@ fn post_image(post atprotocol.Post) !(string, string) {
 }
 
 fn post_counts(post atprotocol.Post) string {
-	return '• replies ${short_size(post.post.replies)} ' +
-		'• reposts ${short_size(post.post.reposts + post.post.quotes)} ' +
-		'• likes ${short_size(post.post.likes)}'
+	return '• replies ${extra.short_size(post.post.replies)} ' +
+		'• reposts ${extra.short_size(post.post.reposts + post.post.quotes)} ' +
+		'• likes ${extra.short_size(post.post.likes)}'
 }
 
 fn clear_image_cache() {

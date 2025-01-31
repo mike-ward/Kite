@@ -1,6 +1,8 @@
+module extra
+
 import time
 
-fn debounce(fn_to_debounce fn (), delay time.Duration) fn () {
+pub fn debounce(fn_to_debounce fn (), delay time.Duration) fn () {
 	mut last := [0]
 	return fn [fn_to_debounce, delay, mut last] () {
 		last[0] += 1

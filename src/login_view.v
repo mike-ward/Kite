@@ -7,7 +7,7 @@ struct Login {
 	password string
 }
 
-fn create_login_view(mut app App) &ui.Widget {
+pub fn create_login_view(mut app App) &ui.Widget {
 	login := &Login{}
 
 	return ui.column(
@@ -56,7 +56,7 @@ fn (mut app App) login(login Login) {
 	start_timeline(mut app)
 }
 
-fn refresh_session(mut app App) {
+pub fn refresh_session(mut app App) {
 	if mut refresh := atprotocol.refresh_session(app.settings.session) {
 		app.settings = Settings{
 			...app.settings

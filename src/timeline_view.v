@@ -1,3 +1,5 @@
+module main
+
 import atprotocol
 import extra
 import os
@@ -10,7 +12,8 @@ const temp_prefix = 'kite_image'
 
 pub fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
-		id: id_timeline
+		heights: [ui.stretch]
+		id:      id_timeline
 	)
 }
 

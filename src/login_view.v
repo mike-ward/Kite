@@ -1,3 +1,5 @@
+module main
+
 import atprotocol
 import ui
 
@@ -52,11 +54,11 @@ fn (mut app App) login(login Login) {
 		session: session
 	}
 	save_settings(app.settings)
-	remove_login_view(mut app)
+	change_view(app.timeline_view, app)
 	start_timeline(mut app)
 }
 
-pub fn refresh_session(mut app App) {
+fn refresh_session(mut app App) {
 	if mut refresh := atprotocol.refresh_session(app.settings.session) {
 		app.settings = Settings{
 			...app.settings

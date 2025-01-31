@@ -23,9 +23,10 @@ pub fn remove_non_ascii(s string) string {
 			.replace('’', "'")
 			.replace('‘', "'")
 			.replace('—', '--')
+			.replace('…', '...')
 	})
 	// strip out non-ascii characters
-	if mut query := regex.regex_opt(r"[^' ',!-~]") {
+	if mut query := regex.regex_opt(r"[^' ',!-ÿ]") {
 		return query.replace(s1, '')
 	}
 	return s1

@@ -1,3 +1,5 @@
+module main
+
 import gx
 import ui
 
@@ -10,23 +12,27 @@ mut:
 	settings              Settings
 	refresh_session_count int
 	timeline_started      bool
-	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
-	txt_color             gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
-	txt_color_dim         gx.Color = gx.rgb(0x80, 0x80, 0x80)
-	txt_color_bold        gx.Color = gx.rgb(0xfe, 0xfe, 0xfe)
-	txt_color_link        gx.Color = gx.rgb(0x64, 0x95, 0xed)
+	login_view            &ui.Widget = unsafe { nil }
+	timeline_view         &ui.Widget = unsafe { nil }
+	bg_color              gx.Color   = gx.rgb(0x30, 0x30, 0x30)
+	txt_color             gx.Color   = gx.rgb(0xbb, 0xbb, 0xbb)
+	txt_color_dim         gx.Color   = gx.rgb(0x80, 0x80, 0x80)
+	txt_color_bold        gx.Color   = gx.rgb(0xfe, 0xfe, 0xfe)
+	txt_color_link        gx.Color   = gx.rgb(0x64, 0x95, 0xed)
 }
 
 fn main() {
 	mut app := &App{}
 	app.settings = load_settings()
+	valid_settings := app.settings.is_valid()
 
-	if app.settings.is_valid() {
+	if valid_settings {
 		refresh_session(mut app)
 	}
 
-	login_view := create_login_view(mut app)
-	timeline_view := create_timeline_view(mut app)
+	app.login_view = create_login_view(mut app)
+	app.timeline_view = create_timeline_view(mut app)
+	view := if valid_settings { app.timeline_view } else { app.login_view }
 
 	app.window = ui.window(
 		height:   app.settings.height
@@ -38,13 +44,12 @@ fn main() {
 				id:         id_main_column
 				scrollview: true
 				margin:     ui.Margin{0, 0, 0, 10}
-				heights:    [ui.stretch, ui.stretch]
-				children:   [login_view, timeline_view]
+				heights:    [ui.stretch]
+				children:   [view]
 			),
 		]
 		on_init:  fn [mut app] (_ &ui.Window) {
 			if app.settings.is_valid() {
-				remove_login_view(mut app)
 				start_timeline(mut app)
 			}
 		}
@@ -53,10 +58,11 @@ fn main() {
 	ui.run(app.window)
 }
 
-fn remove_login_view(mut app App) {
+fn change_view(view &ui.Widget, app App) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
-		for stack.children.len > 1 {
-			stack.remove(at: 0)
+		for stack.children.len > 0 {
+			stack.remove(at: -1)
 		}
+		stack.add(children: [view])
 	}
 }

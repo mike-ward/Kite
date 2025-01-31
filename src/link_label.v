@@ -1,10 +1,12 @@
+module main
+
 import extra
 import ui
 import math
 
 const line_spacing_default = 5
 
-struct LinkLabel {
+struct LinkLabel implements ui.Widget, ui.DrawTextWidget {
 mut:
 	text         string
 	adj_width    int
@@ -22,6 +24,9 @@ mut:
 	id       string
 	x        int
 	y        int
+	ax       int
+	ay       int
+	justify  []f64
 	width    int
 	height   int
 	z_index  int
@@ -84,10 +89,8 @@ fn (mut ll LinkLabel) cleanup() {
 }
 
 fn btn_click(mut ll LinkLabel, e &ui.MouseEvent, w &ui.Window) {
-	if ll.on_click != unsafe { nil } {
-		if ll.point_inside(e.x, e.y) {
-			ll.on_click()
-		}
+	if ll.point_inside(e.x, e.y) {
+		ll.on_click()
 	}
 }
 
@@ -98,6 +101,7 @@ fn (mut ll LinkLabel) set_pos(x int, y int) {
 
 fn (mut ll LinkLabel) propose_size(w int, h int) (int, int) {
 	ll.set_size()
+	ll.ax, ll.ay = ll.width, ll.height
 	return ll.width, ll.height
 }
 

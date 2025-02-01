@@ -5,7 +5,7 @@ import net.http
 
 const pds_host = 'https://bsky.social/xrpc'
 
-pub struct Session {
+pub struct BlueskySession {
 pub:
 	handle          string
 	email           string
@@ -14,12 +14,12 @@ pub:
 	refresh_jwt     string @[json: 'refreshJwt']
 }
 
-pub fn create_session(identifier string, password string) !Session {
+pub fn create_session(identifier string, password string) !BlueskySession {
 	data := '{"identifier": "${identifier}", "password": "${password}"}'
 	response := http.post_json('${pds_host}/com.atproto.server.createSession', data)!
 
 	return match response.status() {
-		.ok { json.decode(Session, response.body) }
+		.ok { json.decode(BlueskySession, response.body) }
 		else { error(response.body) }
 	}
 }

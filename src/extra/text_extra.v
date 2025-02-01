@@ -82,5 +82,5 @@ pub fn wrap_text(s string, width_dpi int, mut dtw ui.DrawTextWidget) string {
 	if line.len > 0 {
 		wrap += line
 	}
-	return wrap
+	return if wrap.len > 0 { wrap } else { ' ' }
 }

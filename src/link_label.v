@@ -126,8 +126,10 @@ fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
 	dtw.draw_device_load_style(d)
 	height := dtw.text_height('W')
 	for i, split in ll.text.split('\n') {
-		spacing := i * ll.line_spacing
-		dtw.draw_device_text(d, ll.x, ll.y + (height * i) + spacing, split)
+		if split.len > 0 {
+			spacing := i * ll.line_spacing
+			dtw.draw_device_text(d, ll.x, ll.y + (height * i) + spacing, split)
+		}
 	}
 }
 
@@ -150,11 +152,11 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 	mut h := 0
 	if ll.text.contains('\n') {
 		for line in ll.text.split('\n') {
-			w = math.max(dtw.text_width(line), w)
+			w = if line.len > 0 { math.max(dtw.text_width(line), w) } else { w }
 			h += line_height
 		}
 	} else {
-		w = dtw.text_width(ll.text)
+		w = dtw.text_width(if ll.text.len > 0 { ll.text } else { ' ' })
 		h = line_height
 	}
 	ll.adj_width = w

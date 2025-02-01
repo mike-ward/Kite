@@ -60,9 +60,7 @@ fn main() {
 
 fn change_view(view &ui.Widget, app App) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
-		for stack.children.len > 0 {
-			stack.remove(at: -1)
-		}
+		stack.children = []
 		stack.add(children: [view])
 	}
 }

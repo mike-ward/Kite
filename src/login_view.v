@@ -62,7 +62,7 @@ fn refresh_session(mut app App) {
 	if mut refresh := atprotocol.refresh_session(app.settings.session) {
 		app.settings = Settings{
 			...app.settings
-			session: atprotocol.Session{
+			session: atprotocol.BlueskySession{
 				...app.settings.session
 				access_jwt:  refresh.access_jwt
 				refresh_jwt: refresh.refresh_jwt

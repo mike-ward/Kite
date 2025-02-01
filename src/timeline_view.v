@@ -39,6 +39,7 @@ fn update_timeline(mut app App) {
 		save_settings(Settings{})
 		atprotocol.error_timeline(err.msg())
 	}
+	get_timeline_images(timeline, mut app)
 	build_timeline(timeline, mut app)
 }
 
@@ -178,24 +179,9 @@ fn external_link(post atprotocol.Post) !(string, string) {
 fn post_image(post atprotocol.Post) !(string, string) {
 	if post.post.record.embed.images.len > 0 {
 		image := post.post.record.embed.images[0]
-		if image.image.ref.link.len > 0 {
-			cid := image.image.ref.link
-			tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${cid}')
-			ratio := match image.aspect_ratio.width != 0 && image.aspect_ratio.height != 0 {
-				true { f64(image.aspect_ratio.height) / f64(image.aspect_ratio.width) }
-				else { 1.0 }
-			}
-			if !os.exists(tmp_file) {
-				blob := atprotocol.get_blob(post.post.author.did, cid)!
-				tmp_file_ := tmp_file + '_'
-				os.write_file(tmp_file_, blob)!
-				img_ := stbi.load(tmp_file_)!
-				os.rm(tmp_file_)!
-				width := 215 // any bigger and images take up too much vertical space
-				img := stbi.resize_uint8(img_, width, int(width * ratio))!
-				stbi.stbi_write_png(tmp_file, img.width, img.height, img.nr_channels,
-					img.data, img.width * img.nr_channels)!
-			}
+		cid := image.image.ref.link
+		tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${cid}')
+		if os.exists(tmp_file) {
 			return tmp_file, image.alt
 		}
 	}
@@ -206,6 +192,33 @@ fn post_counts(post atprotocol.Post) string {
 	return '• replies ${extra.short_size(post.post.replies)} ' +
 		'• reposts ${extra.short_size(post.post.reposts + post.post.quotes)} ' +
 		'• likes ${extra.short_size(post.post.likes)}'
+}
+
+fn get_timeline_images(timeline atprotocol.Timeline, mut app App) {
+	for post in timeline.posts {
+		if post.post.record.embed.images.len > 0 {
+			image := post.post.record.embed.images[0]
+			if image.image.ref.link.len > 0 {
+				cid := image.image.ref.link
+				tmp_file := os.join_path_single(os.temp_dir(), '${temp_prefix}_${cid}')
+				ratio := match image.aspect_ratio.width != 0 && image.aspect_ratio.height != 0 {
+					true { f64(image.aspect_ratio.height) / f64(image.aspect_ratio.width) }
+					else { 1.0 }
+				}
+				if !os.exists(tmp_file) {
+					blob := atprotocol.get_blob(post.post.author.did, cid) or { continue }
+					tmp_file_ := tmp_file + '_'
+					os.write_file(tmp_file_, blob) or { continue }
+					img_ := stbi.load(tmp_file_) or { continue }
+					os.rm(tmp_file_) or { continue }
+					width := 215 // any bigger and images take up too much vertical space
+					img := stbi.resize_uint8(img_, width, int(width * ratio)) or { continue }
+					stbi.stbi_write_png(tmp_file, img.width, img.height, img.nr_channels,
+						img.data, img.width * img.nr_channels) or { continue }
+				}
+			}
+		}
+	}
 }
 
 fn clear_image_cache() {

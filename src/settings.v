@@ -11,7 +11,7 @@ pub struct Settings {
 pub:
 	width   int = 300
 	height  int = 900
-	session atprotocol.Session
+	session atprotocol.BlueskySession
 }
 
 fn (s Settings) is_valid() bool {

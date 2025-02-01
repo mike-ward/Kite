@@ -71,7 +71,7 @@ pub:
 	}
 }
 
-pub fn (session Session) get_timeline() !Timeline {
+pub fn (session BlueskySession) get_timeline() !Timeline {
 	response := http.fetch(
 		method: .get
 		url:    '${pds_host}/app.bsky.feed.getTimeline?limit=25'

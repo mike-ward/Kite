@@ -10,7 +10,7 @@ pub:
 	active      bool
 }
 
-pub fn refresh_session(session Session) !RefreshSession {
+pub fn refresh_session(session BlueskySession) !RefreshSession {
 	response := http.fetch(
 		method: .post
 		url:    '${pds_host}/com.atproto.server.refreshSession'

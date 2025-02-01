@@ -2,6 +2,7 @@ module main
 
 import gx
 import ui
+import views
 
 const id_main_column = 'main-column'
 
@@ -27,10 +28,10 @@ fn main() {
 	valid_settings := app.settings.is_valid()
 
 	if valid_settings {
-		refresh_session(mut app)
+		views.refresh_session(mut app)
 	}
 
-	app.login_view = create_login_view(mut app)
+	app.login_view = views.create_login_view(mut app)
 	app.timeline_view = create_timeline_view(mut app)
 	view := if valid_settings { app.timeline_view } else { app.login_view }
 

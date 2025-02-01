@@ -1,4 +1,4 @@
-module main
+module views
 
 import atprotocol
 import ui
@@ -58,7 +58,7 @@ fn (mut app App) login(login Login) {
 	start_timeline(mut app)
 }
 
-fn refresh_session(mut app App) {
+pub fn refresh_session(mut app App) {
 	if mut refresh := atprotocol.refresh_session(app.settings.session) {
 		app.settings = Settings{
 			...app.settings

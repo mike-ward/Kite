@@ -1,11 +1,10 @@
-module main
-
 import atprotocol
 import extra
 import os
 import stbi
 import time
 import ui
+import widgets
 
 const id_timeline = 'timeline'
 const temp_prefix = 'kite_image'
@@ -36,7 +35,7 @@ pub fn start_timeline(mut app App) {
 
 fn update_timeline(mut app App) {
 	timeline := app.settings.session.get_timeline() or {
-		save_settings(Settings{})
+		Settings{}.save_settings()
 		atprotocol.error_timeline(err.msg())
 	}
 	get_timeline_images(timeline, mut app)
@@ -48,13 +47,13 @@ pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		text_size := 17
 		text_size_small := text_size - 2
 		line_spacing_small := 2
-		mut widgets := []ui.Widget{cap: timeline.posts.len + 1}
+		mut posts := []ui.Widget{cap: timeline.posts.len + 1}
 
 		for post in timeline.posts {
 			mut post_ui := []ui.Widget{cap: 10}
 
 			if mut repost := repost_text(post) {
-				post_ui << link_label(
+				post_ui << widgets.link_label(
 					text:         extra.sanitize_text(repost)
 					text_size:    text_size_small
 					text_color:   app.txt_color_dim
@@ -63,7 +62,7 @@ pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				)
 			}
 
-			post_ui << link_label(
+			post_ui << widgets.link_label(
 				text:       author_timestamp_text(post)
 				text_size:  text_size
 				text_color: app.txt_color_bold
@@ -72,7 +71,7 @@ pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 
 			record_text := extra.sanitize_text(post.post.record.text)
 			if record_text.len > 0 {
-				post_ui << link_label(
+				post_ui << widgets.link_label(
 					text:       record_text
 					text_size:  text_size
 					text_color: app.txt_color
@@ -81,7 +80,7 @@ pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			}
 
 			if lnk, title := external_link(post) {
-				post_ui << link_label(
+				post_ui << widgets.link_label(
 					text:         extra.sanitize_text(title)
 					text_size:    text_size_small
 					text_color:   app.txt_color_link
@@ -105,7 +104,7 @@ pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				)
 			}
 
-			post_ui << link_label(
+			post_ui << widgets.link_label(
 				text:         post_counts(post)
 				text_size:    text_size_small
 				text_color:   app.txt_color_dim
@@ -115,7 +114,7 @@ pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 
 			post_ui << v_space()
 			post_ui << h_line(app)
-			widgets << ui.column(
+			posts << ui.column(
 				spacing:  5
 				children: post_ui
 			)
@@ -124,7 +123,7 @@ pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		for stack.children.len > 0 {
 			stack.remove(at: -1)
 		}
-		stack.add(children: widgets)
+		stack.add(children: posts)
 	}
 }
 

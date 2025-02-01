@@ -1,4 +1,4 @@
-module main
+module widgets
 
 import extra
 import ui
@@ -6,7 +6,7 @@ import math
 
 const line_spacing_default = 5
 
-struct LinkLabel implements ui.Widget, ui.DrawTextWidget {
+pub struct LinkLabel implements ui.Widget, ui.DrawTextWidget {
 mut:
 	text         string
 	adj_width    int
@@ -37,8 +37,9 @@ mut:
 	parent   ui.Layout = ui.empty_stack
 }
 
-struct LinkLabelParams {
+pub struct LinkLabelParams {
 	ui.LabelStyleParams
+pub:
 	id           string
 	width        int
 	height       int
@@ -52,7 +53,7 @@ struct LinkLabelParams {
 	word_wrap    bool
 }
 
-fn link_label(c LinkLabelParams) &LinkLabel {
+pub fn link_label(c LinkLabelParams) &LinkLabel {
 	mut ll := &LinkLabel{
 		id:           c.id
 		text:         c.text

@@ -1,5 +1,3 @@
-module main
-
 import atprotocol
 import os
 import toml
@@ -19,7 +17,7 @@ fn (s Settings) is_valid() bool {
 		&& s.session.refresh_jwt.len > 0
 }
 
-fn load_settings() Settings {
+fn Settings.load_settings() Settings {
 	path := get_settings_path()
 	if os.exists(path) {
 		contents := os.read_file(path) or { '' }
@@ -28,7 +26,7 @@ fn load_settings() Settings {
 	return Settings{}
 }
 
-fn save_settings(settings Settings) {
+fn (settings Settings) save_settings() {
 	contents := toml.encode(settings)
 	path := get_settings_path()
 	os.write_file(path, contents) or { ui.message_box(err.str()) }

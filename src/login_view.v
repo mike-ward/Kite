@@ -1,5 +1,3 @@
-module main
-
 import atprotocol
 import ui
 
@@ -53,7 +51,7 @@ fn (mut app App) login(login Login) {
 		...app.settings
 		session: session
 	}
-	save_settings(app.settings)
+	app.settings.save_settings()
 	change_view(app.timeline_view, app)
 	start_timeline(mut app)
 }
@@ -68,9 +66,9 @@ fn refresh_session(mut app App) {
 				refresh_jwt: refresh.refresh_jwt
 			}
 		}
-		save_settings(app.settings)
+		app.settings.save_settings()
 	} else {
-		save_settings(Settings{})
+		Settings{}.save_settings()
 		eprintln(err.msg())
 	}
 }

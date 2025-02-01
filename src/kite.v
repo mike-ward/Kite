@@ -5,7 +5,7 @@ const id_main_column = 'main-column'
 
 @[heap]
 struct App {
-mut:
+pub mut:
 	window                &ui.Window = unsafe { nil }
 	settings              Settings
 	refresh_session_count int
@@ -56,7 +56,7 @@ fn main() {
 	ui.run(app.window)
 }
 
-fn change_view(view &ui.Widget, app App) {
+fn (app App) change_view(view &ui.Widget) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
 		stack.children = []
 		stack.add(children: [view])

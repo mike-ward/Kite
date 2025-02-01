@@ -52,7 +52,7 @@ fn (mut app App) login(login Login) {
 		session: session
 	}
 	app.settings.save_settings()
-	change_view(app.timeline_view, app)
+	app.change_view(app.timeline_view)
 	start_timeline(mut app)
 }
 

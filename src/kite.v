@@ -1,4 +1,5 @@
 import gx
+import sync
 import ui
 
 const id_main_column = 'main-column'
@@ -9,13 +10,13 @@ pub mut:
 	window                &ui.Window = unsafe { nil }
 	settings              Settings
 	refresh_session_count int
-	timeline_started      bool
 	timeline_posts        []ui.Widget
-	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
-	txt_color             gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
-	txt_color_dim         gx.Color = gx.rgb(0x80, 0x80, 0x80)
-	txt_color_bold        gx.Color = gx.rgb(0xfe, 0xfe, 0xfe)
-	txt_color_link        gx.Color = gx.rgb(0x64, 0x95, 0xed)
+	timeline_posts_mutex  &sync.Mutex = sync.new_mutex()
+	bg_color              gx.Color    = gx.rgb(0x30, 0x30, 0x30)
+	txt_color             gx.Color    = gx.rgb(0xbb, 0xbb, 0xbb)
+	txt_color_dim         gx.Color    = gx.rgb(0x80, 0x80, 0x80)
+	txt_color_bold        gx.Color    = gx.rgb(0xfe, 0xfe, 0xfe)
+	txt_color_link        gx.Color    = gx.rgb(0x64, 0x95, 0xed)
 }
 
 fn main() {
@@ -49,7 +50,8 @@ fn main() {
 			}
 		}
 		on_draw:  fn [mut app] (w &ui.Window) {
-			// Updates have to occurr on UI thread,
+			// Updates have to occurr on UI thread
+			app.timeline_posts_mutex.unlock()
 			if app.timeline_posts.len > 0 {
 				if mut stack := w.get[ui.Stack](id_timeline) {
 					for stack.children.len > 0 {
@@ -59,6 +61,7 @@ fn main() {
 					app.timeline_posts.clear()
 				}
 			}
+			app.timeline_posts_mutex.unlock()
 		}
 	)
 

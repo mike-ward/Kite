@@ -12,20 +12,17 @@ pub fn create_timeline_view(mut app App) &ui.Widget {
 }
 
 pub fn start_timeline(mut app App) {
-	if !app.timeline_started {
-		extra.clear_image_cache()
-		spawn fn [mut app] () {
-			for {
-				update_timeline(mut app)
-				app.refresh_session_count += 1
-				if app.refresh_session_count % 10 == 0 { // Refresh every 10 minutes
-					refresh_session(mut app)
-				}
-				time.sleep(time.minute)
+	extra.clear_image_cache()
+	spawn fn (mut app App) {
+		for {
+			update_timeline(mut app)
+			app.refresh_session_count += 1
+			if app.refresh_session_count % 10 == 0 { // Refresh every 10 minutes
+				refresh_session(mut app)
 			}
-		}()
-		app.timeline_started = true
-	}
+			time.sleep(time.minute)
+		}
+	}(mut app)
 }
 
 fn update_timeline(mut app App) {
@@ -114,7 +111,9 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		)
 	}
 
+	app.timeline_posts_mutex.unlock()
 	app.timeline_posts = posts
+	app.timeline_posts_mutex.lock()
 }
 
 fn v_space() ui.Widget {

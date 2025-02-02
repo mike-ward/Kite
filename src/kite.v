@@ -1,5 +1,7 @@
+import extra
 import gx
 import sync
+import time
 import ui
 
 const id_main_column = 'main-column'
@@ -30,12 +32,16 @@ fn main() {
 
 	view := if valid_settings { create_timeline_view(mut app) } else { create_login_view(mut app) }
 
+	save_settings := extra.debounce(fn [mut app] () {
+		app.settings.save_settings()
+	}, time.second)
+
 	app.window = ui.window(
-		height:   app.settings.height
-		width:    app.settings.width
-		title:    'Kite'
-		bg_color: app.bg_color
-		children: [
+		height:    app.settings.height
+		width:     app.settings.width
+		title:     'Kite'
+		bg_color:  app.bg_color
+		children:  [
 			ui.column(
 				id:         id_main_column
 				scrollview: true
@@ -44,12 +50,20 @@ fn main() {
 				children:   [view]
 			),
 		]
-		on_init:  fn [mut app] (_ &ui.Window) {
+		on_init:   fn [mut app] (_ &ui.Window) {
 			if app.settings.is_valid() {
 				start_timeline(mut app)
 			}
 		}
-		on_draw:  fn [mut app] (w &ui.Window) {
+		on_resize: fn [mut app, save_settings] (_ &ui.Window, w int, h int) {
+			app.settings = Settings{
+				...app.settings
+				width:  w
+				height: h
+			}
+			save_settings()
+		}
+		on_draw:   fn [mut app] (w &ui.Window) {
 			// Updates have to occurr on UI thread
 			app.timeline_posts_mutex.lock()
 			if app.timeline_posts.len > 0 {

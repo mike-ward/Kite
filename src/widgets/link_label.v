@@ -14,6 +14,7 @@ mut:
 	theme_style  string
 	style        ui.LabelStyle
 	style_params ui.LabelStyleParams
+	line_height  int
 	line_spacing int   = line_spacing_default
 	on_click     fn () = unsafe { nil }
 	word_wrap    bool
@@ -125,12 +126,8 @@ fn (mut ll LinkLabel) draw() {
 fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(d)
-	line_height := dtw.text_height('W')
-	for i, split in ll.text.split('\n') {
-		if split.len > 0 {
-			height := line_height + ll.line_spacing
-			dtw.draw_device_text(d, ll.x, ll.y + height * i, split)
-		}
+	for i, line in ll.text.split('\n') {
+		dtw.draw_device_text(d, ll.x, ll.y + ll.line_height * i, line)
 	}
 }
 
@@ -148,17 +145,17 @@ fn (mut ll LinkLabel) set_size() {
 fn (mut ll LinkLabel) adj_size() (int, int) {
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.load_style()
-	line_height := dtw.text_height('W') + ll.line_spacing
 	mut w := 0
 	mut h := 0
+	ll.line_height = dtw.text_height('W') + ll.line_spacing
 	if ll.text.contains('\n') {
 		for line in ll.text.split('\n') {
 			w = if line.len > 0 { math.max(dtw.text_width(line), w) } else { w }
-			h += line_height
+			h += ll.line_height
 		}
 	} else {
 		w = dtw.text_width(if ll.text.len > 0 { ll.text } else { ' ' })
-		h = line_height
+		h = ll.line_height
 	}
 	ll.adj_width = w
 	ll.adj_height = h

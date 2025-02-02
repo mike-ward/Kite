@@ -51,15 +51,15 @@ fn main() {
 		}
 		on_draw:  fn [mut app] (w &ui.Window) {
 			// Updates have to occurr on UI thread
-			app.timeline_posts_mutex.unlock()
+			app.timeline_posts_mutex.lock()
 			if app.timeline_posts.len > 0 {
 				if mut stack := w.get[ui.Stack](id_timeline) {
 					for stack.children.len > 0 {
 						stack.remove()
 					}
 					stack.add(children: app.timeline_posts)
-					app.timeline_posts.clear()
 				}
+				app.timeline_posts.clear()
 			}
 			app.timeline_posts_mutex.unlock()
 		}

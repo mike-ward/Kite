@@ -111,9 +111,9 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		)
 	}
 
-	app.timeline_posts_mutex.unlock()
-	app.timeline_posts = posts
 	app.timeline_posts_mutex.lock()
+	app.timeline_posts = posts
+	app.timeline_posts_mutex.unlock()
 }
 
 fn v_space() ui.Widget {

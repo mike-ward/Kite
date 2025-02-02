@@ -13,7 +13,7 @@ Install the V compiler from https://vlang.io
 
 ```
 git clone https://github.com/mike-ward/Kite
-cd kite/src
+cd kite
 v install ui
 v run .
 ```

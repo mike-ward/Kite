@@ -114,17 +114,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 		)
 	}
 
-	app.window.on_draw = fn [posts] (mut w ui.Window) {
-		if mut stack := w.get[ui.Stack](id_timeline) {
-			stack.remove()
-			mut column := ui.column()
-			stack.add(children: [column])
-			// adding the children as a seperate step
-			// fixes some layout issues
-			column.add(children: posts)
-			w.on_draw = ui.WindowFn(0)
-		}
-	}
+	app.timeline_posts = posts
 }
 
 fn v_space() ui.Widget {

@@ -10,13 +10,12 @@ pub mut:
 	settings              Settings
 	refresh_session_count int
 	timeline_started      bool
-	login_view            &ui.Widget = unsafe { nil }
-	timeline_view         &ui.Widget = unsafe { nil }
-	bg_color              gx.Color   = gx.rgb(0x30, 0x30, 0x30)
-	txt_color             gx.Color   = gx.rgb(0xbb, 0xbb, 0xbb)
-	txt_color_dim         gx.Color   = gx.rgb(0x80, 0x80, 0x80)
-	txt_color_bold        gx.Color   = gx.rgb(0xfe, 0xfe, 0xfe)
-	txt_color_link        gx.Color   = gx.rgb(0x64, 0x95, 0xed)
+	timeline_posts        []ui.Widget
+	bg_color              gx.Color = gx.rgb(0x30, 0x30, 0x30)
+	txt_color             gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
+	txt_color_dim         gx.Color = gx.rgb(0x80, 0x80, 0x80)
+	txt_color_bold        gx.Color = gx.rgb(0xfe, 0xfe, 0xfe)
+	txt_color_link        gx.Color = gx.rgb(0x64, 0x95, 0xed)
 }
 
 fn main() {
@@ -28,9 +27,7 @@ fn main() {
 		refresh_session(mut app)
 	}
 
-	app.login_view = create_login_view(mut app)
-	app.timeline_view = create_timeline_view(mut app)
-	view := if valid_settings { app.timeline_view } else { app.login_view }
+	view := if valid_settings { create_timeline_view(mut app) } else { create_login_view(mut app) }
 
 	app.window = ui.window(
 		height:   app.settings.height
@@ -51,6 +48,18 @@ fn main() {
 				start_timeline(mut app)
 			}
 		}
+		on_draw:  fn [mut app] (w &ui.Window) {
+			// Updates have to occurr on UI thread,
+			if app.timeline_posts.len > 0 {
+				if mut stack := w.get[ui.Stack](id_timeline) {
+					for stack.children.len > 0 {
+						stack.remove()
+					}
+					stack.add(children: app.timeline_posts)
+					app.timeline_posts.clear()
+				}
+			}
+		}
 	)
 
 	ui.run(app.window)
@@ -58,7 +67,7 @@ fn main() {
 
 fn (app App) change_view(view &ui.Widget) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
-		stack.children = []
+		stack.remove()
 		stack.add(children: [view])
 	}
 }

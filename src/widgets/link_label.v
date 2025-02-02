@@ -125,11 +125,11 @@ fn (mut ll LinkLabel) draw() {
 fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(d)
-	height := dtw.text_height('W')
+	line_height := dtw.text_height('W')
 	for i, split in ll.text.split('\n') {
 		if split.len > 0 {
-			spacing := i * ll.line_spacing
-			dtw.draw_device_text(d, ll.x, ll.y + (height * i) + spacing, split)
+			height := line_height + ll.line_spacing
+			dtw.draw_device_text(d, ll.x, ll.y + height * i, split)
 		}
 	}
 }

@@ -8,10 +8,7 @@ import widgets
 const id_timeline = 'timeline'
 
 pub fn create_timeline_view(mut app App) &ui.Widget {
-	return ui.column(
-		heights: [ui.stretch]
-		id:      id_timeline
-	)
+	return ui.column(id: id_timeline)
 }
 
 pub fn start_timeline(mut app App) {
@@ -118,10 +115,14 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			)
 		}
 
-		for stack.children.len > 0 {
-			stack.remove(at: -1)
-		}
-		stack.add(children: posts)
+		// If this seems convoluted it is because it is.
+		// Change it to something more declarative and
+		// you'll see why. Chalk it up to VUI being pre
+		// alpha at the moment.
+		stack.remove()
+		mut column := ui.column()
+		stack.add(children: [column])
+		column.add(children: posts)
 	}
 }
 

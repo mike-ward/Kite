@@ -38,91 +38,92 @@ fn update_timeline(mut app App) {
 }
 
 fn build_timeline(timeline atprotocol.Timeline, mut app App) {
-	if mut stack := app.window.get[ui.Stack](id_timeline) {
-		text_size := 17
-		text_size_small := text_size - 2
-		line_spacing_small := 2
-		mut posts := []ui.Widget{cap: timeline.posts.len + 1}
+	text_size := 17
+	text_size_small := text_size - 2
+	line_spacing_small := 2
+	mut posts := []ui.Widget{cap: timeline.posts.len + 1}
 
-		for post in timeline.posts {
-			mut post_ui := []ui.Widget{cap: 10}
+	for post in timeline.posts {
+		mut post_ui := []ui.Widget{cap: 10}
 
-			if mut repost := repost_text(post) {
-				post_ui << widgets.link_label(
-					text:         extra.sanitize_text(repost)
-					text_size:    text_size_small
-					text_color:   app.txt_color_dim
-					line_spacing: line_spacing_small
-					word_wrap:    true
-				)
-			}
-
+		if mut repost := repost_text(post) {
 			post_ui << widgets.link_label(
-				text:       author_timestamp_text(post)
-				text_size:  text_size
-				text_color: app.txt_color_bold
-				word_wrap:  true
-			)
-
-			record_text := extra.sanitize_text(post.post.record.text)
-			if record_text.len > 0 {
-				post_ui << widgets.link_label(
-					text:       record_text
-					text_size:  text_size
-					text_color: app.txt_color
-					word_wrap:  true
-				)
-			}
-
-			if lnk, title := external_link(post) {
-				post_ui << widgets.link_label(
-					text:         extra.sanitize_text(title)
-					text_size:    text_size_small
-					text_color:   app.txt_color_link
-					line_spacing: line_spacing_small
-					word_wrap:    true
-					on_click:     fn [lnk] () {
-						os.open_uri(lnk) or { ui.message_box(err.msg()) }
-					}
-				)
-			}
-
-			if image_path, _ := post_image(post) {
-				post_ui << v_space()
-				post_ui << ui.column(
-					alignment: .center
-					children:  [
-						v_space(),
-						ui.picture(path: image_path),
-						v_space(),
-					]
-				)
-			}
-
-			post_ui << widgets.link_label(
-				text:         post_counts(post)
+				text:         extra.sanitize_text(repost)
 				text_size:    text_size_small
 				text_color:   app.txt_color_dim
 				line_spacing: line_spacing_small
 				word_wrap:    true
 			)
+		}
 
-			post_ui << v_space()
-			post_ui << h_line(app)
-			posts << ui.column(
-				spacing:  5
-				children: post_ui
+		post_ui << widgets.link_label(
+			text:       author_timestamp_text(post)
+			text_size:  text_size
+			text_color: app.txt_color_bold
+			word_wrap:  true
+		)
+
+		record_text := extra.sanitize_text(post.post.record.text)
+		if record_text.len > 0 {
+			post_ui << widgets.link_label(
+				text:       record_text
+				text_size:  text_size
+				text_color: app.txt_color
+				word_wrap:  true
 			)
 		}
 
-		// If this seems convoluted it is because it is.
-		// Change it to something more declarative and
-		// you'll see why. Chalk it up to VUI being pre
-		// alpha at the moment.
-		stack.remove()
-		mut column := ui.column()
-		stack.add(children: [column])
-		column.add(children: posts)
+		if lnk, title := external_link(post) {
+			post_ui << widgets.link_label(
+				text:         extra.sanitize_text(title)
+				text_size:    text_size_small
+				text_color:   app.txt_color_link
+				line_spacing: line_spacing_small
+				word_wrap:    true
+				on_click:     fn [lnk] () {
+					os.open_uri(lnk) or { ui.message_box(err.msg()) }
+				}
+			)
+		}
+
+		if image_path, _ := post_image(post) {
+			post_ui << v_space()
+			post_ui << ui.column(
+				alignment: .center
+				children:  [
+					v_space(),
+					ui.picture(path: image_path),
+					v_space(),
+				]
+			)
+		}
+
+		post_ui << widgets.link_label(
+			text:         post_counts(post)
+			text_size:    text_size_small
+			text_color:   app.txt_color_dim
+			line_spacing: line_spacing_small
+			word_wrap:    true
+		)
+
+		post_ui << v_space()
+		post_ui << h_line(app)
+		posts << ui.column(
+			spacing:  5
+			children: post_ui
+		)
+	}
+
+	app.window.on_draw = fn [posts] (mut w ui.Window) {
+		if mut stack := w.get[ui.Stack](id_timeline) {
+			stack.remove()
+			mut column := ui.column()
+			stack.add(children: [column])
+			// adding the children as a seperate step
+			// fixes some layout issues
+			column.add(children: posts)
+			w.on_draw = ui.WindowFn(0)
+		}
 	}
 }
 

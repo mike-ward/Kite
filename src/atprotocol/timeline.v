@@ -54,6 +54,17 @@ pub:
 					uri   string
 				}
 			}
+			reply      struct {
+			pub:
+				parent struct {
+				pub:
+					cid string
+				}
+				root   struct {
+				pub:
+					cid string
+				}
+			}
 		}
 		replies int @[json: 'replyCount']
 		likes   int @[json: 'likeCount']
@@ -80,9 +91,14 @@ pub fn get_timeline(session BlueskySession) !Timeline {
 			value: 'Bearer ${session.access_jwt}'
 		)
 	)!
+
+	// println(response.body)
 	return match response.status() {
-		.ok { json.decode(Timeline, response.body) }
-		else { error(response.body) }
+		// vfmt off
+		.ok          { json.decode(Timeline, response.body) }
+		.bad_request { error_timeline('${response.status_msg})') }
+		else         { error(response.status_msg) }
+		// vfmt on
 	}
 }
 

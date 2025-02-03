@@ -20,6 +20,6 @@ pub fn create_session(identifier string, password string) !BlueskySession {
 
 	return match response.status() {
 		.ok { json.decode(BlueskySession, response.body) }
-		else { error(response.body) }
+		else { error(response.status_msg) }
 	}
 }

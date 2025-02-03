@@ -41,6 +41,11 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	mut posts := []ui.Widget{cap: timeline.posts.len + 1}
 
 	for post in timeline.posts {
+		// don't display stand alone replies, no context'
+		if post.post.record.reply.parent.cid.len > 0 || post.post.record.reply.root.cid.len > 0 {
+			continue
+		}
+
 		mut post_ui := []ui.Widget{cap: 10}
 
 		if mut repost := repost_text(post) {
@@ -89,7 +94,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 				alignment: .center
 				children:  [
 					v_space(),
-					ui.picture(path: image_path),
+					ui.picture(path: image_path, use_cache: false),
 					v_space(),
 				]
 			)
@@ -129,10 +134,9 @@ fn h_line(app App) ui.Widget {
 
 fn repost_text(post atprotocol.Post) !string {
 	if post.reason.type.contains('Repost') {
-		by := if post.reason.by.display_name.len > 0 {
-			post.reason.by.display_name
-		} else {
-			post.reason.by.handle
+		by := match post.reason.by.display_name.len > 0 {
+			true { post.reason.by.display_name }
+			else { post.reason.by.handle }
 		}
 		return 'reposted by ${by}'
 	}

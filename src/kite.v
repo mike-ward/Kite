@@ -24,23 +24,26 @@ pub mut:
 fn main() {
 	mut app := &App{}
 	app.settings = Settings.load_settings()
-	valid_settings := app.settings.is_valid()
 
-	if valid_settings {
+	if app.settings.is_valid() {
 		refresh_session(mut app)
 	}
 
-	view := if valid_settings { create_timeline_view(mut app) } else { create_login_view(mut app) }
-
-	save_settings := extra.debounce(fn [mut app] () {
+	save_settings_debounced := extra.debounce(fn [mut app] () {
 		app.settings.save_settings()
 	}, time.second)
+
+	view := match app.settings.is_valid() {
+		true { create_timeline_view(mut app) }
+		else { create_login_view(mut app) }
+	}
 
 	app.window = ui.window(
 		height:    app.settings.height
 		width:     app.settings.width
 		title:     'Kite'
 		bg_color:  app.bg_color
+		min_width: 300
 		children:  [
 			ui.column(
 				id:         id_main_column
@@ -55,17 +58,18 @@ fn main() {
 				start_timeline(mut app)
 			}
 		}
-		on_resize: fn [mut app, save_settings] (_ &ui.Window, w int, h int) {
+		on_resize: fn [mut app, save_settings_debounced] (_ &ui.Window, w int, h int) {
 			app.settings = Settings{
 				...app.settings
 				width:  w
 				height: h
 			}
-			save_settings()
+			save_settings_debounced()
 		}
 		on_draw:   fn [mut app] (w &ui.Window) {
 			// Updates have to occurr on UI thread
 			app.timeline_posts_mutex.lock()
+			defer { app.timeline_posts_mutex.unlock() }
 			if app.timeline_posts.len > 0 {
 				if mut stack := w.get[ui.Stack](id_timeline) {
 					for stack.children.len > 0 {
@@ -75,7 +79,6 @@ fn main() {
 				}
 				app.timeline_posts.clear()
 			}
-			app.timeline_posts_mutex.unlock()
 		}
 	)
 

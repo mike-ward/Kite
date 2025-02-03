@@ -57,7 +57,7 @@ fn (mut app App) login(login Login) {
 }
 
 fn refresh_session(mut app App) {
-	if mut refresh := atprotocol.refresh_session(app.settings.session) {
+	if mut refresh := atprotocol.refresh_bluesky_session(app.settings.session) {
 		app.settings = Settings{
 			...app.settings
 			session: atprotocol.BlueskySession{
@@ -68,7 +68,6 @@ fn refresh_session(mut app App) {
 		}
 		app.settings.save_settings()
 	} else {
-		Settings{}.save_settings()
 		eprintln(err.msg())
 	}
 }

@@ -66,8 +66,7 @@ pub fn wrap_text(s string, width_dpi int, mut dtw ui.DrawTextWidget) string {
 	mut wrap := ''
 	mut line := ''
 	dtw.load_style()
-	ss := s.replace('\n', ' ')
-	for field in ss.fields() {
+	for field in s.fields() {
 		tw := dtw.text_width(line + ' ' + field)
 		if tw > width_dpi {
 			wrap += '${line}\n'

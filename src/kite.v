@@ -89,5 +89,7 @@ fn (app App) change_view(view &ui.Widget) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
 		stack.remove()
 		stack.add(children: [view])
+	} else {
+		eprintln('${@METHOD}(): id_main_column not found')
 	}
 }

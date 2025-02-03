@@ -28,7 +28,9 @@ pub fn create_login_view(mut app App) &ui.Widget {
 				text:        &login.password
 			),
 			ui.column(
-				margin:   ui.Margin{0, 0, 0, 150}
+				margin:   ui.Margin{
+					left: 150
+				}
 				children: [
 					ui.button(
 						text:     'Login'

@@ -112,7 +112,12 @@ fn (mut ll LinkLabel) size() (int, int) {
 }
 
 fn (mut ll LinkLabel) point_inside(x f64, y f64) bool {
-	return x >= ll.x && x <= ll.x + ll.width && y >= ll.y && y <= ll.y + ll.height
+	// vfmt off
+        return x >= ll.x &&
+               y >= ll.y &&
+               x <= ll.x + ll.width &&
+               y <= ll.y + ll.height
+	// vfmt on
 }
 
 fn (mut ll LinkLabel) set_visible(visible bool) {
@@ -148,14 +153,9 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 	mut w := 0
 	mut h := 0
 	ll.line_height = dtw.text_height('W') + ll.line_spacing
-	if ll.text.contains('\n') {
-		for line in ll.text.split('\n') {
-			w = if line.len > 0 { math.max(dtw.text_width(line), w) } else { w }
-			h += ll.line_height
-		}
-	} else {
-		w = dtw.text_width(if ll.text.len > 0 { ll.text } else { ' ' })
-		h = ll.line_height
+	for line in ll.text.split('\n') {
+		w = if line.len > 0 { math.max(dtw.text_width(line), w) } else { w }
+		h += ll.line_height
 	}
 	ll.adj_width = w
 	ll.adj_height = h

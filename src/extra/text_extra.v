@@ -24,6 +24,7 @@ pub fn remove_non_ascii(s string) string {
 			.replace('‘', "'")
 			.replace('—', '--')
 			.replace('…', '...')
+			.replace('&mdash;', '--')
 			.replace('\xa0', ' ') // &nbsp;
 	})
 	// strip out non-ascii characters
@@ -62,25 +63,28 @@ pub fn short_size(size int) string {
 	return size.str()
 }
 
-pub fn wrap_text(s string, width_dpi int, mut dtw ui.DrawTextWidget) string {
+pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) string {
 	mut wrap := ''
 	mut line := ''
 	dtw.load_style()
 	for field in s.fields() {
 		tw := dtw.text_width(line + ' ' + field)
-		if tw > width_dpi {
+		if tw > width_dip {
 			wrap += '${line}\n'
 			line = field
 		} else {
-			if line.len > 0 {
-				line += ' '
+			line += match line.len > 0 {
+				true { ' ' + field }
+				else { field }
 			}
-			line += field
 		}
 	}
 	line = line.trim_space()
 	if line.len > 0 {
 		wrap += line
 	}
-	return if wrap.len > 0 { wrap } else { ' ' }
+	return match wrap.len > 0 {
+		true { wrap }
+		else { ' ' }
+	}
 }

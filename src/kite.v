@@ -19,6 +19,7 @@ pub mut:
 	txt_color_dim         gx.Color    = gx.rgb(0x80, 0x80, 0x80)
 	txt_color_bold        gx.Color    = gx.rgb(0xfe, 0xfe, 0xfe)
 	txt_color_link        gx.Color    = gx.rgb(0x64, 0x95, 0xed)
+	hline_color           gx.Color    = gx.rgb(0x50, 0x50, 0x50)
 }
 
 fn main() {
@@ -34,7 +35,7 @@ fn main() {
 	}, time.second)
 
 	view := match app.settings.is_valid() {
-		true { create_timeline_view(mut app) }
+		true { create_timeline_view() }
 		else { create_login_view(mut app) }
 	}
 
@@ -68,17 +69,7 @@ fn main() {
 		}
 		on_draw:   fn [mut app] (w &ui.Window) {
 			// Updates have to occurr on UI thread
-			app.timeline_posts_mutex.lock()
-			defer { app.timeline_posts_mutex.unlock() }
-			if app.timeline_posts.len > 0 {
-				if mut stack := w.get[ui.Stack](id_timeline) {
-					for stack.children.len > 0 {
-						stack.remove()
-					}
-					stack.add(children: app.timeline_posts)
-				}
-				app.timeline_posts.clear()
-			}
+			draw_timeline(w, mut app)
 		}
 	)
 

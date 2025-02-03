@@ -7,7 +7,7 @@ import widgets
 
 const id_timeline = 'timeline'
 
-pub fn create_timeline_view(mut app App) &ui.Widget {
+pub fn create_timeline_view() &ui.Widget {
 	return ui.column(id: id_timeline)
 }
 
@@ -93,9 +93,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			post_ui << ui.column(
 				alignment: .center
 				children:  [
-					v_space(),
 					ui.picture(path: image_path, use_cache: false),
-					v_space(),
 				]
 			)
 		}
@@ -105,11 +103,10 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 			text_size:    text_size_small
 			text_color:   app.txt_color_dim
 			line_spacing: line_spacing_small
-			word_wrap:    true
 		)
 
 		post_ui << v_space()
-		post_ui << h_line(app)
+		post_ui << widgets.h_line(color: app.hline_color)
 		posts << ui.column(
 			spacing:  5
 			children: post_ui
@@ -121,15 +118,24 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	app.timeline_posts_mutex.unlock()
 }
 
-fn v_space() ui.Widget {
-	return ui.rectangle(height: 0)
+// Call this on the Window's on_draw() function.
+// It must occur on the UI thread or crashes happen.
+fn draw_timeline(w &ui.Window, mut app App) {
+	app.timeline_posts_mutex.lock()
+	defer { app.timeline_posts_mutex.unlock() }
+	if app.timeline_posts.len > 0 {
+		if mut stack := w.get[ui.Stack](id_timeline) {
+			for stack.children.len > 0 {
+				stack.remove()
+			}
+			stack.add(children: app.timeline_posts)
+		}
+		app.timeline_posts.clear()
+	}
 }
 
-fn h_line(app App) ui.Widget {
-	return ui.rectangle(
-		border:       true
-		border_color: app.txt_color_dim
-	)
+fn v_space() ui.Widget {
+	return ui.rectangle(height: 0)
 }
 
 fn repost_text(post atprotocol.Post) !string {

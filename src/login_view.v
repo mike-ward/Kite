@@ -10,7 +10,7 @@ struct Login {
 pub fn create_login_view(mut app App) &ui.Widget {
 	login := &Login{}
 
-	return ui.column(
+	column := ui.column(
 		margin:   ui.Margin{20, 20, 20, 20}
 		spacing:  5
 		children: [
@@ -42,6 +42,8 @@ pub fn create_login_view(mut app App) &ui.Widget {
 			),
 		]
 	)
+
+	return column
 }
 
 fn (mut app App) login(login Login) {
@@ -54,7 +56,7 @@ fn (mut app App) login(login Login) {
 		session: session
 	}
 	app.settings.save_settings()
-	app.change_view(create_timeline_view(mut app))
+	app.change_view(create_timeline_view())
 	start_timeline(mut app)
 }
 

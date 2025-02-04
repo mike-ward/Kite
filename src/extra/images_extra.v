@@ -1,13 +1,13 @@
 module extra
 
-import atprotocol
+import bsky
 import os
 import stbi
 import time
 
 pub const image_prefix = 'kite_image'
 
-pub fn get_timeline_images(timeline atprotocol.Timeline) {
+pub fn get_timeline_images(timeline bsky.Timeline) {
 	for post in timeline.posts {
 		if post.post.record.embed.images.len > 0 {
 			image := post.post.record.embed.images[0]
@@ -19,7 +19,7 @@ pub fn get_timeline_images(timeline atprotocol.Timeline) {
 					else { 1.0 }
 				}
 				if !os.exists(tmp_file) {
-					blob := atprotocol.get_blob(post.post.author.did, cid) or { continue }
+					blob := bsky.get_blob(post.post.author.did, cid) or { continue }
 					tmp_file_ := tmp_file + '_'
 					os.write_file(tmp_file_, blob) or { continue }
 					img_ := stbi.load(tmp_file_) or { continue }

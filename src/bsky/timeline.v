@@ -1,4 +1,4 @@
-module atprotocol
+module bsky
 
 import json
 import net.http

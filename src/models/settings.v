@@ -1,6 +1,6 @@
 module models
 
-import atprotocol
+import bsky
 import os
 import toml
 import ui
@@ -12,7 +12,7 @@ pub:
 	width     int = 300
 	height    int = 900
 	font_size int = 18
-	session   atprotocol.BlueskySession
+	session   bsky.BlueskySession
 }
 
 pub fn (s Settings) is_valid() bool {

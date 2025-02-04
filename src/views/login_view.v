@@ -1,7 +1,7 @@
 module views
 
 import models { App, Settings }
-import atprotocol
+import bsky
 import ui
 
 @[heap]
@@ -50,7 +50,7 @@ pub fn create_login_view(mut app App) &ui.Widget {
 }
 
 fn do_login(login Login, mut app App) {
-	session := atprotocol.create_session(login.name, login.password) or {
+	session := bsky.create_session(login.name, login.password) or {
 		ui.message_box(err.str())
 		return
 	}

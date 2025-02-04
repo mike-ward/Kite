@@ -1,13 +1,13 @@
 module models
 
-import atprotocol
+import bsky
 import extra
 import gx
 import ui
 import sync
 import time
 
-pub const id_main_column = '_main-column_'
+pub const id_main_column = '_main-view-column_'
 
 @[heap]
 pub struct App {
@@ -35,10 +35,10 @@ pub fn (app App) change_view(view &ui.Widget) {
 }
 
 pub fn (mut app App) refresh_session() {
-	if mut refresh := atprotocol.refresh_bluesky_session(app.settings.session) {
+	if mut refresh := bsky.refresh_bluesky_session(app.settings.session) {
 		app.settings = Settings{
 			...app.settings
-			session: atprotocol.BlueskySession{
+			session: bsky.BlueskySession{
 				...app.settings.session
 				access_jwt:  refresh.access_jwt
 				refresh_jwt: refresh.refresh_jwt
@@ -50,7 +50,7 @@ pub fn (mut app App) refresh_session() {
 	}
 }
 
-pub type BuildTimelineFn = fn (timeline atprotocol.Timeline, mut app App)
+pub type BuildTimelineFn = fn (timeline bsky.Timeline, mut app App)
 
 pub fn (mut app App) start_timeline(build_timeline BuildTimelineFn) {
 	extra.clear_image_cache()
@@ -67,9 +67,9 @@ pub fn (mut app App) start_timeline(build_timeline BuildTimelineFn) {
 }
 
 fn (mut app App) update_timeline(build_timeline BuildTimelineFn) {
-	timeline := atprotocol.get_timeline(app.settings.session) or {
+	timeline := bsky.get_timeline(app.settings.session) or {
 		Settings{}.save_settings()
-		atprotocol.error_timeline(err.msg())
+		bsky.error_timeline(err.msg())
 	}
 	extra.get_timeline_images(timeline)
 	build_timeline(timeline, mut app)

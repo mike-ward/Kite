@@ -1,7 +1,7 @@
 module views
 
 import models { App }
-import atprotocol
+import bsky
 import extra
 import os
 import time
@@ -14,7 +14,7 @@ pub fn create_timeline_view() &ui.Widget {
 	return ui.column(id: id_timeline)
 }
 
-pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
+fn build_timeline(timeline bsky.Timeline, mut app App) {
 	text_size := app.settings.font_size
 	text_size_small := text_size - 2
 	line_spacing_small := 3
@@ -118,7 +118,7 @@ fn v_space() ui.Widget {
 	return ui.rectangle(height: 0)
 }
 
-fn repost_text(post atprotocol.Post) !string {
+fn repost_text(post bsky.Post) !string {
 	if post.reason.type.contains('Repost') {
 		by := match post.reason.by.display_name.len > 0 {
 			true { post.reason.by.display_name }
@@ -129,7 +129,7 @@ fn repost_text(post atprotocol.Post) !string {
 	return error('no repost')
 }
 
-fn author_timestamp_text(post atprotocol.Post) string {
+fn author_timestamp_text(post bsky.Post) string {
 	handle := post.post.author.handle
 	d_name := post.post.author.display_name
 	author := extra.remove_non_ascii(if d_name.len > 0 { d_name } else { handle })
@@ -143,7 +143,7 @@ fn author_timestamp_text(post atprotocol.Post) string {
 	return extra.truncate_long_fields('${author} • ${time_stamp}')
 }
 
-fn external_link(post atprotocol.Post) !(string, string) {
+fn external_link(post bsky.Post) !(string, string) {
 	external := post.post.record.embed.external
 	return match external.uri.len > 0 && external.title.trim_space().len > 0 {
 		true { external.uri, external.title.trim_space() }
@@ -154,7 +154,7 @@ fn external_link(post atprotocol.Post) !(string, string) {
 // get_post_image downloads the first image blob assciated with the post
 // and returns the file path where the image is stored and the alt text
 // for that image. Images are resized to reduce memory load.
-fn post_image(post atprotocol.Post) !(string, string) {
+fn post_image(post bsky.Post) !(string, string) {
 	if post.post.record.embed.images.len > 0 {
 		image := post.post.record.embed.images[0]
 		cid := image.image.ref.link
@@ -166,7 +166,7 @@ fn post_image(post atprotocol.Post) !(string, string) {
 	return error('no image found')
 }
 
-fn post_counts(post atprotocol.Post) string {
+fn post_counts(post bsky.Post) string {
 	return '• replies ${extra.short_size(post.post.replies)} ' +
 		'• reposts ${extra.short_size(post.post.reposts + post.post.quotes)} ' +
 		'• likes ${extra.short_size(post.post.likes)}'

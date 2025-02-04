@@ -1,4 +1,6 @@
-import models { App, Settings }
+module views
+
+import models { App }
 import atprotocol
 import extra
 import os
@@ -12,30 +14,7 @@ pub fn create_timeline_view() &ui.Widget {
 	return ui.column(id: id_timeline)
 }
 
-pub fn start_timeline(mut app App) {
-	extra.clear_image_cache()
-	spawn fn (mut app App) {
-		for {
-			update_timeline(mut app)
-			app.refresh_session_count += 1
-			if app.refresh_session_count % 10 == 0 { // Refresh every 10 minutes
-				refresh_session(mut app)
-			}
-			time.sleep(time.minute)
-		}
-	}(mut app)
-}
-
-fn update_timeline(mut app App) {
-	timeline := atprotocol.get_timeline(app.settings.session) or {
-		Settings{}.save_settings()
-		atprotocol.error_timeline(err.msg())
-	}
-	extra.get_timeline_images(timeline)
-	build_timeline(timeline, mut app)
-}
-
-fn build_timeline(timeline atprotocol.Timeline, mut app App) {
+pub fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 	text_size := app.settings.font_size
 	text_size_small := text_size - 2
 	line_spacing_small := 3
@@ -121,7 +100,7 @@ fn build_timeline(timeline atprotocol.Timeline, mut app App) {
 
 // Call this on the Window's on_draw() function.
 // It must occur on the UI thread or crashes happen.
-fn draw_timeline(w &ui.Window, mut app App) {
+pub fn draw_timeline(w &ui.Window, mut app App) {
 	app.timeline_posts_mutex.lock()
 	defer { app.timeline_posts_mutex.unlock() }
 	if app.timeline_posts.len > 0 {

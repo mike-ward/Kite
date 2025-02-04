@@ -1,3 +1,5 @@
+module views
+
 import models { App, Settings }
 import atprotocol
 import ui
@@ -58,21 +60,5 @@ fn do_login(login Login, mut app App) {
 	}
 	app.settings.save_settings()
 	app.change_view(create_timeline_view())
-	start_timeline(mut app)
-}
-
-fn refresh_session(mut app App) {
-	if mut refresh := atprotocol.refresh_bluesky_session(app.settings.session) {
-		app.settings = Settings{
-			...app.settings
-			session: atprotocol.BlueskySession{
-				...app.settings.session
-				access_jwt:  refresh.access_jwt
-				refresh_jwt: refresh.refresh_jwt
-			}
-		}
-		app.settings.save_settings()
-	} else {
-		eprintln(err.msg())
-	}
+	app.start_timeline(build_timeline)
 }

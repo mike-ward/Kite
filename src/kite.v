@@ -1,4 +1,5 @@
 import models { App, Settings }
+import views
 import extra
 import time
 import ui
@@ -8,7 +9,7 @@ fn main() {
 	app.settings = Settings.load_settings()
 
 	if app.settings.is_valid() {
-		refresh_session(mut app)
+		app.refresh_session()
 	}
 
 	save_settings_debounced := extra.debounce(fn [mut app] () {
@@ -16,8 +17,8 @@ fn main() {
 	}, time.second)
 
 	view := match app.settings.is_valid() {
-		true { create_timeline_view() }
-		else { create_login_view(mut app) }
+		true { views.create_timeline_view() }
+		else { views.create_login_view(mut app) }
 	}
 
 	app.window = ui.window(
@@ -37,7 +38,7 @@ fn main() {
 		]
 		on_init:   fn [mut app] (_ &ui.Window) {
 			if app.settings.is_valid() {
-				start_timeline(mut app)
+				app.start_timeline(views.build_timeline)
 			}
 		}
 		on_resize: fn [mut app, save_settings_debounced] (_ &ui.Window, w int, h int) {
@@ -50,7 +51,7 @@ fn main() {
 		}
 		on_draw:   fn [mut app] (w &ui.Window) {
 			// Updates need to occur on UI thread
-			draw_timeline(w, mut app)
+			views.draw_timeline(w, mut app)
 		}
 	)
 

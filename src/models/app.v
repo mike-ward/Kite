@@ -1,8 +1,11 @@
 module models
 
+import atprotocol
+import extra
 import gx
 import ui
 import sync
+import time
 
 pub const id_main_column = '_main-column_'
 
@@ -29,4 +32,45 @@ pub fn (app App) change_view(view &ui.Widget) {
 	} else {
 		eprintln('${@METHOD}(): id_main_column not found')
 	}
+}
+
+pub fn (mut app App) refresh_session() {
+	if mut refresh := atprotocol.refresh_bluesky_session(app.settings.session) {
+		app.settings = Settings{
+			...app.settings
+			session: atprotocol.BlueskySession{
+				...app.settings.session
+				access_jwt:  refresh.access_jwt
+				refresh_jwt: refresh.refresh_jwt
+			}
+		}
+		app.settings.save_settings()
+	} else {
+		eprintln(err.msg())
+	}
+}
+
+pub type BuildTimelineFn = fn (timeline atprotocol.Timeline, mut app App)
+
+pub fn (mut app App) start_timeline(build_timeline BuildTimelineFn) {
+	extra.clear_image_cache()
+	spawn fn [build_timeline] (mut app App) {
+		for {
+			app.update_timeline(build_timeline)
+			app.refresh_session_count += 1
+			if app.refresh_session_count % 10 == 0 { // Refresh every 10 minutes
+				app.refresh_session()
+			}
+			time.sleep(time.minute)
+		}
+	}(mut app)
+}
+
+fn (mut app App) update_timeline(build_timeline BuildTimelineFn) {
+	timeline := atprotocol.get_timeline(app.settings.session) or {
+		Settings{}.save_settings()
+		atprotocol.error_timeline(err.msg())
+	}
+	extra.get_timeline_images(timeline)
+	build_timeline(timeline, mut app)
 }

@@ -1,3 +1,4 @@
+import models { App, Settings }
 import atprotocol
 import ui
 
@@ -35,7 +36,7 @@ pub fn create_login_view(mut app App) &ui.Widget {
 					ui.button(
 						text:     'Login'
 						on_click: fn [mut app, login] (_ &ui.Button) {
-							app.login(login)
+							do_login(login, mut app)
 						}
 					),
 				]
@@ -46,7 +47,7 @@ pub fn create_login_view(mut app App) &ui.Widget {
 	return column
 }
 
-fn (mut app App) login(login Login) {
+fn do_login(login Login, mut app App) {
 	session := atprotocol.create_session(login.name, login.password) or {
 		ui.message_box(err.str())
 		return

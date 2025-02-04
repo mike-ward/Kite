@@ -38,9 +38,6 @@ pub fn h_line(c HLineParams) &HLine {
 fn (mut hl HLine) init(parent ui.Layout) {
 	hl.parent = parent
 	hl.ui = parent.get_ui()
-	if hl.width == 0 {
-		hl.width, _ = parent.size()
-	}
 }
 
 fn (mut hl HLine) cleanup() {

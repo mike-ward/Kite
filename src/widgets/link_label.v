@@ -3,21 +3,24 @@ module widgets
 import extra
 import ui
 import math
+import sokol.sapp
+import gx
 
 const line_spacing_default = 5
 
-pub struct LinkLabel implements ui.Widget, ui.DrawTextWidget {
+pub type LinkLabelClickFn = fn ()
+
+pub struct LinkLabel implements ui.Widget, ui.DrawTextWidget, ui.EnterLeaveWidget {
 mut:
 	text         string
-	adj_width    int
-	adj_height   int
 	theme_style  string
 	style        ui.LabelStyle
 	style_params ui.LabelStyleParams
 	line_height  int
-	line_spacing int   = line_spacing_default
-	on_click     fn () = unsafe { nil }
+	line_spacing int              = line_spacing_default
+	on_click     LinkLabelClickFn = LinkLabelClickFn(0)
 	word_wrap    bool
+	is_over      bool
 	// DrawTextWidget interface
 	text_styles ui.TextStyles
 	// Widget interface
@@ -42,15 +45,10 @@ pub struct LinkLabelParams {
 	ui.LabelStyleParams
 pub:
 	id           string
-	width        int
-	height       int
-	z_index      int
-	clipping     bool
-	justify      []f64 = [0.0, 0.0]
 	text         string
-	theme        string = ui.no_style
-	line_spacing int    = line_spacing_default
-	on_click     fn ()  = unsafe { nil }
+	theme        string           = ui.no_style
+	line_spacing int              = line_spacing_default
+	on_click     LinkLabelClickFn = LinkLabelClickFn(0)
 	word_wrap    bool
 }
 
@@ -58,11 +56,7 @@ pub fn link_label(c LinkLabelParams) &LinkLabel {
 	mut ll := &LinkLabel{
 		id:           c.id
 		text:         c.text
-		width:        c.width
-		height:       c.height
 		ui:           unsafe { nil }
-		z_index:      c.z_index
-		clipping:     c.clipping
 		style_params: c.LabelStyleParams
 		line_spacing: c.line_spacing
 		on_click:     c.on_click
@@ -77,22 +71,40 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 	ll.ui = parent.get_ui()
 	ll.load_style()
 	ll.set_size()
-	if ll.on_click != unsafe { nil } {
+	if ll.on_click != LinkLabelClickFn(0) {
 		mut subscriber := parent.get_subscriber()
-		subscriber.subscribe_method(ui.events.on_click, btn_click, ll)
+		subscriber.subscribe_method(ui.events.on_click, ll_click, ll)
+		subscriber.subscribe_method(ui.events.on_mouse_move, ll_mouse_move, ll)
 	}
 }
 
 fn (mut ll LinkLabel) cleanup() {
-	if ll.on_click != unsafe { nil } {
+	if ll.on_click != LinkLabelClickFn(0) {
 		mut subscriber := ll.parent.get_subscriber()
 		subscriber.unsubscribe_method(ui.events.on_click, ll)
+		subscriber.unsubscribe_method(ui.events.on_mouse_move, ll)
 	}
 }
 
-fn btn_click(mut ll LinkLabel, e &ui.MouseEvent, w &ui.Window) {
+fn ll_mouse_move(mut ll LinkLabel, e &ui.MouseMoveEvent, window &ui.Window) {
+	ll.is_over = ll.point_inside(e.x, e.y)
+}
+
+fn ll_click(mut ll LinkLabel, e &ui.MouseEvent, w &ui.Window) {
 	if ll.point_inside(e.x, e.y) {
 		ll.on_click()
+	}
+}
+
+fn (mut ll LinkLabel) mouse_enter(e &ui.MouseMoveEvent) {
+	if ll.on_click != LinkLabelClickFn(0) {
+		sapp.set_mouse_cursor(sapp.MouseCursor.pointing_hand)
+	}
+}
+
+fn (mut ll LinkLabel) mouse_leave(e &ui.MouseMoveEvent) {
+	if ll.on_click != LinkLabelClickFn(0) {
+		sapp.set_mouse_cursor(sapp.MouseCursor.default)
 	}
 }
 
@@ -131,12 +143,24 @@ fn (mut ll LinkLabel) draw() {
 fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(d)
+	if ll.on_click != LinkLabelClickFn(0) {
+		text_color := ll.style_params.text_color
+		dtw.text_styles.current.color = match ll.is_over {
+			true { dim_color(text_color) }
+			else { text_color }
+		}
+	}
 	for i, line in ll.text.split('\n') {
 		dtw.draw_device_text(d, ll.x, ll.y + ll.line_height * i, line)
 	}
 }
 
-// ---------
+// --- non-interface stuff
+
+fn dim_color(color gx.Color) gx.Color {
+	dim := 0.85
+	return gx.rgb(u8(f64(color.r) * dim), u8(f64(color.g) * dim), u8(f64(color.b) * dim))
+}
 
 fn (mut ll LinkLabel) set_size() {
 	if ll.word_wrap {
@@ -157,9 +181,7 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 		w = if line.len > 0 { math.max(dtw.text_width(line), w) } else { w }
 		h += ll.line_height
 	}
-	ll.adj_width = w
-	ll.adj_height = h
-	return ll.adj_width, ll.adj_height
+	return w, h
 }
 
 fn (mut ll LinkLabel) load_style() {

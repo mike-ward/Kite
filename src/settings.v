@@ -7,9 +7,10 @@ const settings_file = '.kite.toml'
 
 pub struct Settings {
 pub:
-	width   int = 300
-	height  int = 900
-	session atprotocol.BlueskySession
+	width     int = 300
+	height    int = 900
+	font_size int = 18
+	session   atprotocol.BlueskySession
 }
 
 fn (s Settings) is_valid() bool {

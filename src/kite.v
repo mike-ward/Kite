@@ -4,7 +4,7 @@ import sync
 import time
 import ui
 
-const id_main_column = 'main-column'
+const id_main_column = '_main-column_'
 
 @[heap]
 struct App {
@@ -68,7 +68,7 @@ fn main() {
 			save_settings_debounced()
 		}
 		on_draw:   fn [mut app] (w &ui.Window) {
-			// Updates have to occurr on UI thread
+			// Updates need to occur on UI thread
 			draw_timeline(w, mut app)
 		}
 	)

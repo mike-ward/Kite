@@ -35,9 +35,9 @@ fn update_timeline(mut app App) {
 }
 
 fn build_timeline(timeline atprotocol.Timeline, mut app App) {
-	text_size := 17
+	text_size := app.settings.font_size
 	text_size_small := text_size - 2
-	line_spacing_small := 2
+	line_spacing_small := 3
 	mut posts := []ui.Widget{cap: timeline.posts.len + 1}
 
 	for post in timeline.posts {

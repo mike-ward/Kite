@@ -10,7 +10,7 @@ const line_spacing_default = 5
 
 pub type LinkLabelClickFn = fn ()
 
-pub struct LinkLabel implements ui.Widget, ui.DrawTextWidget, ui.EnterLeaveWidget {
+pub struct LinkLabel implements ui.Widget, ui.DrawTextWidget {
 mut:
 	text         string
 	theme_style  string
@@ -86,25 +86,20 @@ fn (mut ll LinkLabel) cleanup() {
 	}
 }
 
+// ll_mouse_move called only if on_click is set
 fn ll_mouse_move(mut ll LinkLabel, e &ui.MouseMoveEvent, window &ui.Window) {
+	was_over := ll.is_over
 	ll.is_over = ll.point_inside(e.x, e.y)
+	if ll.is_over && !was_over {
+		sapp.set_mouse_cursor(sapp.MouseCursor.pointing_hand)
+	} else if was_over && !ll.is_over {
+		sapp.set_mouse_cursor(sapp.MouseCursor.default)
+	}
 }
 
 fn ll_click(mut ll LinkLabel, e &ui.MouseEvent, w &ui.Window) {
 	if ll.point_inside(e.x, e.y) {
 		ll.on_click()
-	}
-}
-
-fn (mut ll LinkLabel) mouse_enter(e &ui.MouseMoveEvent) {
-	if ll.on_click != LinkLabelClickFn(0) {
-		sapp.set_mouse_cursor(sapp.MouseCursor.pointing_hand)
-	}
-}
-
-fn (mut ll LinkLabel) mouse_leave(e &ui.MouseMoveEvent) {
-	if ll.on_click != LinkLabelClickFn(0) {
-		sapp.set_mouse_cursor(sapp.MouseCursor.default)
 	}
 }
 

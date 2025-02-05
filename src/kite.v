@@ -22,12 +22,12 @@ fn main() {
 	}
 
 	app.window = ui.window(
-		height:    app.settings.height
-		width:     app.settings.width
-		title:     'Kite'
-		bg_color:  app.bg_color
-		min_width: 300
-		children:  [
+		height:     app.settings.height
+		width:      app.settings.width
+		title:      'Kite'
+		bg_color:   app.bg_color
+		min_width:  300
+		children:   [
 			ui.column(
 				id:         models.id_main_column
 				scrollview: true
@@ -36,12 +36,12 @@ fn main() {
 				children:   [view]
 			),
 		]
-		on_init:   fn [mut app] (_ &ui.Window) {
+		on_init:    fn [mut app] (_ &ui.Window) {
 			if app.settings.is_valid() {
 				app.start_timeline(views.build_timeline_posts)
 			}
 		}
-		on_resize: fn [mut app, save_settings_debounced] (_ &ui.Window, w int, h int) {
+		on_resize:  fn [mut app, save_settings_debounced] (_ &ui.Window, w int, h int) {
 			app.settings = Settings{
 				...app.settings
 				width:  w
@@ -49,11 +49,20 @@ fn main() {
 			}
 			save_settings_debounced()
 		}
-		on_draw:   fn [mut app] (w &ui.Window) {
+		on_draw:    fn [mut app] (w &ui.Window) {
 			// Updates need to occur on UI thread
 			views.draw_timeline(w, mut app)
 		}
+		on_focus:   fn (mut w ui.Window) {
+			// cheap, hacky to know if window has focus
+			// until framework gets something better
+			w.locked_focus = 'y'
+		}
+		on_unfocus: fn (mut w ui.Window) {
+			w.locked_focus = ''
+		}
 	)
 
+	app.window.locked_focus = 'y'
 	ui.run(app.window)
 }

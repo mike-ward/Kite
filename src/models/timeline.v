@@ -88,7 +88,7 @@ fn post_image(post bsky.BlueskyPost) (string, string) {
 	if post.post.record.embed.images.len > 0 {
 		image := post.post.record.embed.images[0]
 		cid := image.image.ref.link
-		tmp_file := os.join_path_single(os.temp_dir(), '${image_prefix}_${cid}')
+		tmp_file := image_tmp_file_path(cid)
 		if os.exists(tmp_file) {
 			return tmp_file, image.alt
 		}
@@ -102,7 +102,7 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 			image := post.post.record.embed.images[0]
 			if image.image.ref.link.len > 0 {
 				cid := image.image.ref.link
-				tmp_file := os.join_path_single(os.temp_dir(), '${image_prefix}_${cid}')
+				tmp_file := image_tmp_file_path(cid)
 				ratio := match image.aspect_ratio.width != 0 && image.aspect_ratio.height != 0 {
 					true { f64(image.aspect_ratio.height) / f64(image.aspect_ratio.width) }
 					else { 1.0 }
@@ -113,7 +113,7 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 					os.write_file(tmp_file_, blob) or { continue }
 					img_ := stbi.load(tmp_file_) or { continue }
 					os.rm(tmp_file_) or { continue }
-					width := 215 // any bigger and images take up too much vertical space
+					width := 265 // any bigger and images take up too much vertical space
 					img := stbi.resize_uint8(img_, width, int(width * ratio)) or { continue }
 					stbi.stbi_write_png(tmp_file, img.width, img.height, img.nr_channels,
 						img.data, img.width * img.nr_channels) or { continue }
@@ -121,6 +121,10 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 			}
 		}
 	}
+}
+
+fn image_tmp_file_path(cid string) string {
+	return os.join_path_single(os.temp_dir(), '${image_prefix}_${cid}')
 }
 
 pub fn clear_image_cache() {

@@ -73,7 +73,14 @@ pub fn (mut app App) start_timeline(build_timeline_fn BuildTimelineFn) {
 fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
 	ten_minutes := 10 * time.minute
 	mut refresh_time := time.now()
+
 	for {
+		if time.since(refresh_time) > ten_minutes {
+			extra.trace('refresh_session')
+			app.refresh_session()
+			refresh_time = time.now()
+		}
+
 		bluesky_timeline := bsky.get_timeline(app.settings.session) or {
 			Settings{}.save_settings()
 			bsky.error_timeline(err.msg())
@@ -82,12 +89,6 @@ fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
 		get_timeline_images(bluesky_timeline)
 		timeline := from_bluesky_timeline(bluesky_timeline)
 		build_timeline_fn(timeline, mut app)
-
-		if time.since(refresh_time) > ten_minutes {
-			extra.trace('refresh_session')
-			app.refresh_session()
-			refresh_time = time.now()
-		}
 
 		time.sleep(time.minute)
 	}

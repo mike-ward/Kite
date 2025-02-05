@@ -1,10 +1,10 @@
 module widgets
 
 import extra
-import ui
+import gx
 import math
 import sokol.sapp
-import gx
+import ui
 
 const line_spacing_default = 5
 
@@ -88,12 +88,16 @@ fn (mut ll LinkLabel) cleanup() {
 
 // ll_mouse_move called only if on_click is set
 fn ll_mouse_move(mut ll LinkLabel, e &ui.MouseMoveEvent, window &ui.Window) {
-	was_over := ll.is_over
-	ll.is_over = ll.point_inside(e.x, e.y)
-	if ll.is_over && !was_over {
-		sapp.set_mouse_cursor(sapp.MouseCursor.pointing_hand)
-	} else if was_over && !ll.is_over {
-		sapp.set_mouse_cursor(sapp.MouseCursor.default)
+	if ll.has_focus() {
+		is_over := ll.point_inside(e.x, e.y)
+		if is_over && !ll.is_over {
+			sapp.set_mouse_cursor(sapp.MouseCursor.pointing_hand)
+			ll.is_over = true
+		}
+		if !is_over && ll.is_over {
+			sapp.set_mouse_cursor(sapp.MouseCursor.default)
+			ll.is_over = false
+		}
 	}
 }
 
@@ -138,7 +142,7 @@ fn (mut ll LinkLabel) draw() {
 fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(d)
-	if ll.on_click != LinkLabelClickFn(0) {
+	if ll.on_click != LinkLabelClickFn(0) && ll.has_focus() {
 		text_color := ll.style_params.text_color
 		dtw.text_styles.current.color = match ll.is_over {
 			true { dim_color(text_color) }
@@ -201,4 +205,8 @@ fn (mut ll LinkLabel) update_theme_style(theme string) {
 fn (mut ll LinkLabel) update_style(p ui.LabelStyleParams) {
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.update_theme_style_params(p)
+}
+
+fn (ll LinkLabel) has_focus() bool {
+	return ll.ui.window.locked_focus.len > 0
 }

@@ -6,12 +6,12 @@ import time
 
 const error_title = 'kite error'
 
-pub struct Timeline {
+pub struct BlueskyTimeline {
 pub:
-	posts []Post @[json: 'feed']
+	posts []BlueskyPost @[json: 'feed']
 }
 
-pub struct Post {
+pub struct BlueskyPost {
 pub:
 	post   struct {
 	pub:
@@ -82,7 +82,7 @@ pub:
 	}
 }
 
-pub fn get_timeline(session BlueskySession) !Timeline {
+pub fn get_timeline(session BlueskySession) !BlueskyTimeline {
 	response := http.fetch(
 		method: .get
 		url:    '${pds_host}/app.bsky.feed.getTimeline?limit=25'
@@ -95,15 +95,15 @@ pub fn get_timeline(session BlueskySession) !Timeline {
 	// println(response.body)
 	return match response.status() {
 		// vfmt off
-		.ok          { json.decode(Timeline, response.body) }
+		.ok          { json.decode(BlueskyTimeline, response.body) }
 		.bad_request { error_timeline('${response.status_msg})') }
 		else         { error(response.status_msg) }
 		// vfmt on
 	}
 }
 
-pub fn error_timeline(s string) Timeline {
-	return Timeline{
+pub fn error_timeline(s string) BlueskyTimeline {
+	return BlueskyTimeline{
 		posts: [
 			struct {
 				post: struct {

@@ -14,7 +14,7 @@ pub fn create_timeline_view() &ui.Widget {
 	return ui.column(id: id_timeline)
 }
 
-fn build_timeline(timeline bsky.Timeline, mut app App) {
+fn build_timeline_posts(timeline bsky.Timeline, mut app App) {
 	text_size := app.settings.font_size
 	text_size_small := text_size - 2
 	line_spacing_small := 3
@@ -98,8 +98,8 @@ fn build_timeline(timeline bsky.Timeline, mut app App) {
 	app.timeline_posts_mutex.unlock()
 }
 
-// Call this on the Window's on_draw() function.
-// It must occur on the UI thread or crashes happen.
+// draw_timeline is used in Window's on_draw() function
+// so it can occur on the UI thread or crashes happen.
 pub fn draw_timeline(w &ui.Window, mut app App) {
 	app.timeline_posts_mutex.lock()
 	defer { app.timeline_posts_mutex.unlock() }

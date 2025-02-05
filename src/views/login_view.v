@@ -1,17 +1,16 @@
 module views
 
-import models { App, Settings }
-import bsky
+import models { App }
 import ui
 
 @[heap]
-struct Login {
+struct Crendentials {
 	name     string
 	password string
 }
 
 pub fn create_login_view(mut app App) &ui.Widget {
-	login := &Login{}
+	credentials := &Crendentials{}
 
 	column := ui.column(
 		margin:   ui.Margin{20, 20, 20, 20}
@@ -22,13 +21,13 @@ pub fn create_login_view(mut app App) &ui.Widget {
 				max_len:     20
 				width:       200
 				placeholder: 'email'
-				text:        &login.name
+				text:        &credentials.name
 			),
 			ui.textbox(
 				max_len:     50
 				width:       200
 				placeholder: 'password'
-				text:        &login.password
+				text:        &credentials.password
 			),
 			ui.column(
 				margin:   ui.Margin{
@@ -37,8 +36,8 @@ pub fn create_login_view(mut app App) &ui.Widget {
 				children: [
 					ui.button(
 						text:     'Login'
-						on_click: fn [mut app, login] (_ &ui.Button) {
-							do_login(login, mut app)
+						on_click: fn [mut app, credentials] (_ &ui.Button) {
+							app.login(credentials.name, credentials.password, on_login)
 						}
 					),
 				]
@@ -49,16 +48,7 @@ pub fn create_login_view(mut app App) &ui.Widget {
 	return column
 }
 
-fn do_login(login Login, mut app App) {
-	session := bsky.create_session(login.name, login.password) or {
-		ui.message_box(err.str())
-		return
-	}
-	app.settings = Settings{
-		...app.settings
-		session: session
-	}
-	app.settings.save_settings()
+fn on_login(mut app App) {
 	app.change_view(create_timeline_view())
-	app.start_timeline(build_timeline)
+	app.start_timeline(build_timeline_posts)
 }

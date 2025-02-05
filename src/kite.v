@@ -38,7 +38,7 @@ fn main() {
 		]
 		on_init:   fn [mut app] (_ &ui.Window) {
 			if app.settings.is_valid() {
-				app.start_timeline(views.build_timeline)
+				app.start_timeline(views.build_timeline_posts)
 			}
 		}
 		on_resize: fn [mut app, save_settings_debounced] (_ &ui.Window, w int, h int) {

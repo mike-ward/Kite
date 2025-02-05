@@ -25,6 +25,19 @@ pub mut:
 	hline_color           gx.Color    = gx.rgb(0x50, 0x50, 0x50)
 }
 
+pub fn (mut app App) login(name string, password string, on_login fn (mut app App)) {
+	session := bsky.create_session(name, password) or {
+		ui.message_box(err.str())
+		return
+	}
+	app.settings = Settings{
+		...app.settings
+		session: session
+	}
+	app.settings.save_settings()
+	on_login(mut app)
+}
+
 pub fn (app App) change_view(view &ui.Widget) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
 		stack.remove()

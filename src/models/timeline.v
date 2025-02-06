@@ -5,7 +5,9 @@ import time
 import os
 import stbi
 
+const kite_dir = 'kite'
 const image_prefix = 'kite_image'
+const image_tmp_dir = os.join_path(os.temp_dir(), kite_dir)
 
 pub struct Timeline {
 pub:
@@ -97,26 +99,35 @@ fn post_image(post bsky.BlueskyPost) (string, string) {
 }
 
 pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
+	// final width, no bigger or too wide for 300 width window
+	width := 265
+	os.mkdir_all(image_tmp_dir) or { eprintln(err) }
+
 	for post in timeline.posts {
 		if post.post.record.embed.images.len > 0 {
 			image := post.post.record.embed.images[0]
 			if image.image.ref.link.len > 0 {
 				cid := image.image.ref.link
-				tmp_file := image_tmp_file_path(cid)
-				ratio := match image.aspect_ratio.width != 0 && image.aspect_ratio.height != 0 {
-					true { f64(image.aspect_ratio.height) / f64(image.aspect_ratio.width) }
-					else { 1.0 }
-				}
-				if !os.exists(tmp_file) {
-					blob := bsky.get_blob(post.post.author.did, cid) or { continue }
-					tmp_file_ := tmp_file + '_'
-					os.write_file(tmp_file_, blob) or { continue }
-					img_ := stbi.load(tmp_file_) or { continue }
-					os.rm(tmp_file_) or { continue }
-					width := 265 // any bigger and images take up too much vertical space
-					img := stbi.resize_uint8(img_, width, int(width * ratio)) or { continue }
-					stbi.stbi_write_png(tmp_file, img.width, img.height, img.nr_channels,
-						img.data, img.width * img.nr_channels) or { continue }
+				image_tmp_file := image_tmp_file_path(cid)
+				if !os.exists(image_tmp_file) {
+					blob := bsky.get_blob(post.post.author.did, cid) or {
+						eprintln(err)
+						continue
+					}
+					m_img := stbi.load_from_memory(blob.str, blob.len) or {
+						eprintln(err)
+						continue
+					}
+					ratio := match image.aspect_ratio.width != 0 && image.aspect_ratio.height != 0 {
+						true { f64(image.aspect_ratio.height) / f64(image.aspect_ratio.width) }
+						else { 1.0 }
+					}
+					r_img := stbi.resize_uint8(m_img, width, int(width * ratio)) or {
+						eprintln(err)
+						continue
+					}
+					stbi.stbi_write_jpg(image_tmp_file, r_img.width, r_img.height, r_img.nr_channels,
+						r_img.data, 90) or { eprintln(err) }
 				}
 			}
 		}
@@ -124,15 +135,14 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 }
 
 fn image_tmp_file_path(cid string) string {
-	return os.join_path_single(os.temp_dir(), '${image_prefix}_${cid}')
+	return os.join_path_single(image_tmp_dir, '${image_prefix}_${cid}.jpg')
 }
 
 pub fn clear_image_cache() {
-	tmp_dir := os.temp_dir()
-	entries := os.ls(tmp_dir) or { [] }
+	entries := os.ls(image_tmp_dir) or { [] }
 	for entry in entries {
 		if entry.starts_with(image_prefix) {
-			path := os.join_path_single(tmp_dir, entry)
+			path := os.join_path_single(image_tmp_dir, entry)
 			last := os.file_last_mod_unix(path)
 			date := time.unix(last)
 			diff := time.utc() - date

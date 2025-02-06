@@ -41,8 +41,18 @@ pub fn remove_www_links(s string) string {
 	return s
 }
 
+const http_pattern = r'[$|\W](https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*[-a-zA-Z0-9@%_\+~#//=])?)'
+
+pub fn remove_http_links(s string) string {
+	if mut query := regex.regex_opt(http_pattern) {
+		return query.replace(s, '')
+	}
+	return s
+}
+
 pub fn sanitize_text(s string) string {
-	l := remove_www_links(s)
+	h := remove_http_links(s)
+	l := remove_www_links(h)
 	t := truncate_long_fields(l)
 	return remove_non_ascii(t)
 }

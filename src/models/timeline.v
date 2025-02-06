@@ -27,6 +27,7 @@ pub:
 	replies    int
 	reposts    int
 	likes      int
+	bsky_link  string
 }
 
 pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline) Timeline {
@@ -49,6 +50,7 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 	d_name := post.post.author.display_name
 	uri, title := external_link(post)
 	path, alt := post_image(post)
+	bsky_link := bluesky_post_link(post)
 
 	return Post{
 		author:     if d_name.len > 0 { d_name } else { handle }
@@ -62,7 +64,14 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 		replies:    post.post.replies
 		reposts:    post.post.reposts + post.post.quotes
 		likes:      post.post.likes
+		bsky_link:  bsky_link
 	}
+}
+
+fn bluesky_post_link(post bsky.BlueskyPost) string {
+	id := post.post.uri.all_after_last('.post/')
+	handle := post.post.author.handle
+	return 'https://bsky.app/profile/${handle}/post/${id}'
 }
 
 fn repost_by(post bsky.BlueskyPost) string {

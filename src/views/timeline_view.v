@@ -36,6 +36,9 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			text_size:  text_size
 			text_color: app.txt_color_bold
 			word_wrap:  true
+			on_click:   fn [post] () {
+				os.open_uri(post.bsky_link) or { ui.message_box(err.msg()) }
+			}
 		)
 
 		record_text := extra.sanitize_text(post.text)

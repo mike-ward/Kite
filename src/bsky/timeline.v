@@ -15,6 +15,7 @@ pub struct BlueskyPost {
 pub:
 	post   struct {
 	pub:
+		uri     string
 		author  struct {
 		pub:
 			did          string

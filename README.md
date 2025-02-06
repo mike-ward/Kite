@@ -3,7 +3,7 @@
 A Bluesky desktop client written in the V programming language.
 Currently in development so consider this a proof-of-concept for now.
 
-![Screenshot](screenshot.jpg)
+![Screenshot](screenshot.png)
 
 ## Features
 - Updates timeline every minute

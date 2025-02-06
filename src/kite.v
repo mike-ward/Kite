@@ -31,7 +31,7 @@ fn main() {
 			ui.column(
 				id:         models.id_main_column
 				scrollview: true
-				margin:     ui.Margin{0, 0, 0, 10}
+				margin:     ui.Margin{3, 0, 0, 10}
 				heights:    [ui.stretch]
 				children:   [view]
 			),

@@ -85,7 +85,7 @@ pub:
 pub fn get_timeline(session BlueskySession) !BlueskyTimeline {
 	response := http.fetch(
 		method: .get
-		url:    '${pds_host}/app.bsky.feed.getTimeline?limit=25'
+		url:    '${pds_host}/app.bsky.feed.getTimeline?limit=35'
 		header: http.new_header(
 			key:   .authorization
 			value: 'Bearer ${session.access_jwt}'

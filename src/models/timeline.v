@@ -33,6 +33,10 @@ pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline) Timeline {
 	mut posts := []Post{}
 
 	for post in timeline.posts {
+		if post.post.record.reply.parent.cid.len > 0 || post.post.record.reply.root.cid.len > 0 {
+			// don't display stand alone replies, no context'
+			continue
+		}
 		posts << from_bluesky_post(post)
 	}
 	return Timeline{

@@ -19,11 +19,6 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 	mut posts := []ui.Widget{cap: timeline.posts.len + 1}
 
 	for post in timeline.posts {
-		// don't display stand alone replies, no context'
-		// if post.post.record.reply.parent.cid.len > 0 || post.post.record.reply.root.cid.len > 0 {
-		//	continue
-		//}
-
 		mut post_ui := []ui.Widget{cap: 10}
 
 		if post.repost_by.len > 0 {

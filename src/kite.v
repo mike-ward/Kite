@@ -29,11 +29,9 @@ fn main() {
 		min_width:  300
 		children:   [
 			ui.column(
-				id:         models.id_main_column
-				scrollview: true
-				margin:     ui.Margin{0, 0, 0, 10}
-				heights:    [ui.stretch]
-				children:   [view]
+				id:       models.id_main_column
+				heights:  [ui.stretch]
+				children: [view]
 			),
 		]
 		on_init:    fn [mut app] (_ &ui.Window) {

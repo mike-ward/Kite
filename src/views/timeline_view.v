@@ -9,7 +9,19 @@ import widgets
 const id_timeline = 'timeline'
 
 pub fn create_timeline_view() &ui.Widget {
-	return ui.column(id: id_timeline, margin: ui.Margin{3, 0, 0, 0})
+	// Extra column layout required to work around some
+	// rendering issues with VUI. Early alpha issues
+	// that will likely go away at some point.
+	return ui.column(
+		scrollview: true
+		margin:     ui.Margin{0, 0, 0, 10}
+		children:   [
+			ui.column(
+				id:     id_timeline
+				margin: ui.Margin{3, 0, 0, 0}
+			),
+		]
+	)
 }
 
 fn build_timeline_posts(timeline Timeline, mut app App) {
@@ -23,7 +35,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.repost_by.len > 0 {
 			post_ui << widgets.link_label(
-				text:         extra.sanitize_text(post.repost_by)
+				text:         extra.sanitize_text('reposted by ${post.repost_by}')
 				text_size:    text_size_small
 				text_color:   app.txt_color_dim
 				line_spacing: line_spacing_small

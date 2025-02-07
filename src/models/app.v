@@ -7,6 +7,7 @@ import ui
 import sync
 import time
 
+const max_timeline_posts = 25
 pub const id_main_column = '_main-view-column_'
 
 pub type BuildTimelineFn = fn (timeline Timeline, mut app App)
@@ -87,7 +88,7 @@ fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
 		}
 
 		get_timeline_images(bluesky_timeline)
-		timeline := from_bluesky_timeline(bluesky_timeline)
+		timeline := from_bluesky_timeline(bluesky_timeline, max_timeline_posts)
 		build_timeline_fn(timeline, mut app)
 
 		time.sleep(time.minute)

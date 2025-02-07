@@ -30,8 +30,9 @@ pub:
 	bsky_link  string
 }
 
-pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline) Timeline {
-	mut posts := []Post{}
+pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline, max_posts int) Timeline {
+	mut posts := []Post{cap: max_posts}
+	mut post_count := 0
 
 	for post in timeline.posts {
 		if post.post.record.reply.parent.cid.len > 0 || post.post.record.reply.root.cid.len > 0 {
@@ -39,6 +40,10 @@ pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline) Timeline {
 			continue
 		}
 		posts << from_bluesky_post(post)
+		post_count += 1
+		if post_count > max_posts {
+			break
+		}
 	}
 	return Timeline{
 		posts: posts

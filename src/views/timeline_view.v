@@ -9,7 +9,7 @@ import widgets
 const id_timeline = 'timeline'
 
 pub fn create_timeline_view() &ui.Widget {
-	return ui.column(id: id_timeline)
+	return ui.column(id: id_timeline, margin: ui.Margin{3, 0, 0, 0})
 }
 
 fn build_timeline_posts(timeline Timeline, mut app App) {

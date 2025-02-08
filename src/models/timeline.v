@@ -16,6 +16,7 @@ pub:
 
 pub struct Post {
 pub:
+	id         string
 	author     string
 	created_at time.Time
 	text       string
@@ -58,6 +59,7 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 	bsky_link := bluesky_post_link(post)
 
 	return Post{
+		id:         post.post.uri
 		author:     if d_name.len > 0 { d_name } else { handle }
 		created_at: time.parse_iso8601(post.post.record.created_at) or { time.utc() }
 		text:       post.post.record.text

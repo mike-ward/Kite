@@ -17,7 +17,7 @@ fn main() {
 	}, time.second)
 
 	view := match app.settings.is_valid() {
-		true { views.create_timeline_view() }
+		true { views.create_timeline_view(mut app) }
 		else { views.create_login_view(mut app) }
 	}
 
@@ -47,12 +47,12 @@ fn main() {
 			}
 			save_settings_debounced()
 		}
-		on_draw:    fn [mut app] (w &ui.Window) {
+		on_draw:    fn [mut app] (mut w ui.Window) {
 			// Updates need to occur on UI thread
-			views.draw_timeline(w, mut app)
+			views.draw_timeline(mut w, mut app)
 		}
 		on_focus:   fn (mut w ui.Window) {
-			// cheap, hacky to know if window has focus
+			// cheap, hacky way to know if window has focus
 			// until framework gets something better
 			w.locked_focus = 'y'
 		}

@@ -7,12 +7,15 @@ import ui
 import widgets
 
 const id_timeline = 'timeline'
+const id_timeline_scrollview = 'timeline_scrollview'
+const id_up_button = '_up_button_'
 
-pub fn create_timeline_view() &ui.Widget {
+pub fn create_timeline_view(mut app App) &ui.Widget {
 	// Extra column layout required to work around some
 	// rendering issues with VUI. Early alpha issues
 	// that will likely go away at some point.
 	return ui.column(
+		id:         id_timeline_scrollview
 		scrollview: true
 		margin:     ui.Margin{0, 0, 0, 10}
 		children:   [
@@ -96,11 +99,13 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		post_ui << v_space()
 		post_ui << widgets.h_line(color: app.hline_color)
 		posts << ui.column(
+			id:       post.id
 			spacing:  5
 			children: post_ui
 		)
 	}
 
+	// app.timeline_posts shared with UI thread
 	app.timeline_posts_mutex.lock()
 	app.timeline_posts = posts
 	app.timeline_posts_mutex.unlock()
@@ -108,18 +113,65 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 // draw_timeline is used in Window's on_draw() function
 // so it can occur on the UI thread or crashes happen.
-pub fn draw_timeline(w &ui.Window, mut app App) {
+pub fn draw_timeline(mut w ui.Window, mut app App) {
+	// app.timeline_posts shared with timeline_loop thread
 	app.timeline_posts_mutex.lock()
 	defer { app.timeline_posts_mutex.unlock() }
+	mut notice := false
 
 	if app.timeline_posts.len > 0 {
-		if mut stack := w.get[ui.Stack](id_timeline) {
-			for stack.children.len > 0 {
-				stack.remove()
+		notice = app.timeline_posts[0].id != app.first_post_id
+		app.timeline_up_button.notice = true
+		if mut tl := w.get[ui.Stack](id_timeline_scrollview) {
+			if (tl.has_scrollview && tl.scrollview.offset_y == 0) || !tl.has_scrollview {
+				if mut stack := w.get[ui.Stack](id_timeline) {
+					for stack.children.len > 0 {
+						stack.remove()
+					}
+					stack.add(children: app.timeline_posts)
+				}
+				app.first_post_id = app.timeline_posts[0].id
+				app.timeline_posts.clear()
+				notice = false
+				app.timeline_up_button.notice = false
 			}
-			stack.add(children: app.timeline_posts)
 		}
-		app.timeline_posts.clear()
+	}
+
+	// This is a little hacky. Couldn't get canvas to
+	// behave with timeline components so use windows's
+	// top_layer canvas to host up_button.
+	radius := 15
+	diameter := radius * 2
+	x := app.window.width - diameter
+	y := app.window.height - diameter
+	if app.timeline_up_button == unsafe { nil } {
+		mut up_button := widgets.up_button(
+			id:           id_up_button
+			x:            x
+			y:            y
+			radius:       radius
+			bg_color:     app.bg_color
+			fg_color:     app.txt_color_bold
+			border_color: app.txt_color_link
+			on_click:     fn [w] (_ &widgets.UpButton) {
+				if mut tl := w.get[ui.Stack](id_timeline_scrollview) {
+					if tl.has_scrollview {
+						tl.scrollview.set(0, .btn_y)
+					}
+				}
+			}
+		)
+		app.window.add_top_layer(up_button)
+		// add_top_layer() does not init and register widgets. Bug?
+		up_button.init(w.top_layer)
+		w.register_child(*up_button)
+		app.timeline_up_button = up_button
+	}
+	app.timeline_up_button.set_pos(x, y)
+	app.timeline_up_button.notice = notice
+	if mut tls := w.get[ui.Stack](id_timeline_scrollview) {
+		app.timeline_up_button.set_visible(tls.scrollview.offset_y != 0)
 	}
 }
 

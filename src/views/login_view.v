@@ -49,6 +49,7 @@ pub fn create_login_view(mut app App) &ui.Widget {
 }
 
 fn on_login(mut app App) {
-	app.change_view(create_timeline_view())
+	timeline_view := create_timeline_view(mut app)
+	app.change_view(timeline_view)
 	app.start_timeline(build_timeline_posts)
 }

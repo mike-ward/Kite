@@ -145,9 +145,12 @@ fn (mut ub UpButton) draw_device(mut d ui.DrawDevice) {
 
 	d.draw_line(xc, yt, xl, yb, ub.fg_color)
 	d.draw_line(xc, yt, xr, yb, ub.fg_color)
+	d.draw_line(xc - 1, yt, xl - 1, yb, ub.fg_color)
+	d.draw_line(xc + 1, yt, xr + 1, yb, ub.fg_color)
+
 	// Notice indictor is small dot
 	if ub.notice {
-		d.draw_circle_filled(ub.x, yt - 2, 3, ub.br_color)
+		d.draw_circle_filled(ub.x, yt + 4, 6, ub.br_color)
 	}
 }
 

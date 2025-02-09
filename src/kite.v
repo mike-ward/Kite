@@ -39,13 +39,21 @@ fn main() {
 				app.start_timeline(views.build_timeline_posts)
 			}
 		}
-		on_resize:  fn [mut app, save_settings_debounced] (_ &ui.Window, w int, h int) {
+		on_resize:  fn [mut app, save_settings_debounced] (win &ui.Window, w int, h int) {
 			app.settings = Settings{
 				...app.settings
 				width:  w
 				height: h
 			}
 			save_settings_debounced()
+
+			// Timeline view draws at scroll pos zero instead of the current
+			// scroll pos on resizes. Likely a bug in VUI. For now, Setting
+			// the scroll pos manually forces Timeline view to draw at the
+			// desired scroll pos
+			if mut sv_stack := win.get[ui.Stack](views.id_timeline_scrollview) {
+				sv_stack.scrollview.set(sv_stack.scrollview.offset_y, .btn_y)
+			}
 		}
 		on_draw:    fn [mut app] (mut w ui.Window) {
 			// Updates need to occur on UI thread

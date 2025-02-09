@@ -8,8 +8,8 @@ import widgets
 
 const v_scrollbar_width = 10
 const id_timeline = 'timeline'
-const id_timeline_scrollview = 'timeline_scrollview'
 const id_up_button = '_up_button_'
+pub const id_timeline_scrollview = 'timeline_scrollview'
 
 pub fn create_timeline_view(mut app App) &ui.Widget {
 	// Extra column layout required to work around some
@@ -138,7 +138,7 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 	// This is a little hacky. Couldn't get canvas to
 	// behave with timeline components so use windows's
 	// top_layer canvas to host up_button.
-	radius := 15
+	radius := 19
 	diameter := radius * 2
 	x := app.window.width - diameter
 	y := app.window.height - diameter

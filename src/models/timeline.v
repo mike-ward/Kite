@@ -5,6 +5,8 @@ import time
 import os
 import stbi
 
+pub const image_width = 265
+
 const kite_dir = 'kite'
 const image_prefix = 'kite_image'
 const image_tmp_dir = os.join_path(os.temp_dir(), kite_dir)
@@ -119,8 +121,6 @@ fn post_image(post bsky.BlueskyPost) (string, string) {
 }
 
 pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
-	// final width, no bigger or too wide for 300 width window
-	width := 265
 	os.mkdir_all(image_tmp_dir) or { eprintln(err) }
 
 	for post in timeline.posts {
@@ -142,7 +142,7 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 						true { f64(image.aspect_ratio.height) / f64(image.aspect_ratio.width) }
 						else { 1.0 }
 					}
-					r_img := stbi.resize_uint8(m_img, width, int(width * ratio)) or {
+					r_img := stbi.resize_uint8(m_img, image_width, int(image_width * ratio)) or {
 						eprintln(err)
 						continue
 					}

@@ -6,6 +6,7 @@ import os
 import ui
 import widgets
 
+const v_scrollbar_width = 10
 const id_timeline = 'timeline'
 const id_timeline_scrollview = 'timeline_scrollview'
 const id_up_button = '_up_button_'
@@ -17,7 +18,7 @@ pub fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
 		id:         id_timeline_scrollview
 		scrollview: true
-		margin:     ui.Margin{0, 0, 0, 10}
+		margin:     ui.Margin{0, 0, 0, v_scrollbar_width}
 		children:   [
 			ui.column(
 				id:     id_timeline
@@ -81,12 +82,9 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.image_path.len > 0 {
 			post_ui << v_space()
-			post_ui << ui.column(
-				alignment: .center
-				children:  [
-					ui.picture(path: post.image_path, use_cache: false),
-				]
-			)
+			mut pic := ui.picture(path: post.image_path, use_cache: false)
+			pic.offset_x = v_scrollbar_width
+			post_ui << pic
 		}
 
 		post_ui << widgets.link_label(

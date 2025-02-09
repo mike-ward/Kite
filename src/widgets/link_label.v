@@ -46,8 +46,10 @@ pub struct LinkLabelParams {
 pub:
 	id           string
 	text         string
-	theme        string           = ui.no_style
-	line_spacing int              = line_spacing_default
+	theme        string = ui.no_style
+	line_spacing int    = line_spacing_default
+	offset_x     int
+	offset_y     int
 	on_click     LinkLabelClickFn = LinkLabelClickFn(0)
 	word_wrap    bool
 }
@@ -59,6 +61,8 @@ pub fn link_label(c LinkLabelParams) &LinkLabel {
 		ui:           unsafe { nil }
 		style_params: c.LabelStyleParams
 		line_spacing: c.line_spacing
+		offset_x:     c.offset_x
+		offset_y:     c.offset_y
 		on_click:     c.on_click
 		word_wrap:    c.word_wrap
 	}
@@ -119,15 +123,15 @@ fn (mut ll LinkLabel) propose_size(w int, h int) (int, int) {
 }
 
 fn (mut ll LinkLabel) size() (int, int) {
-	return ll.width, ll.height
+	return ll.width + ll.offset_x, ll.height + ll.offset_y
 }
 
 fn (mut ll LinkLabel) point_inside(x f64, y f64) bool {
 	// vfmt off
-        return x >= ll.x &&
-               y >= ll.y &&
-               x <= ll.x + ll.width &&
-               y <= ll.y + ll.height
+        return x >= ll.x + ll.offset_x &&
+               y >= ll.y + ll.offset_y &&
+               x <= ll.x + ll.offset_x + ll.width &&
+               y <= ll.y + ll.offset_y + ll.height
 	// vfmt on
 }
 
@@ -149,8 +153,11 @@ fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
 			else { text_color }
 		}
 	}
-	for i, line in ll.text.split('\n') {
-		dtw.draw_device_text(d, ll.x, ll.y + ll.line_height * i, line)
+	x := ll.x + ll.offset_x
+	mut y := ll.y + ll.offset_y
+	for line in ll.text.split('\n') {
+		dtw.draw_device_text(d, x, y, line)
+		y += ll.line_height
 	}
 }
 
@@ -163,8 +170,8 @@ fn dim_color(color gx.Color) gx.Color {
 
 fn (mut ll LinkLabel) set_size() {
 	if ll.word_wrap {
-		mut dtw := ui.DrawTextWidget(ll)
 		mut wp, _ := ll.parent.size()
+		mut dtw := ui.DrawTextWidget(ll)
 		right_padding := 10
 		ll.text = extra.wrap_text(ll.text, wp - right_padding, mut dtw)
 	}
@@ -173,7 +180,6 @@ fn (mut ll LinkLabel) set_size() {
 
 fn (mut ll LinkLabel) adj_size() (int, int) {
 	mut dtw := ui.DrawTextWidget(ll)
-	dtw.load_style()
 	mut w := 0
 	mut h := 0
 	ll.line_height = dtw.text_height('W') + ll.line_spacing

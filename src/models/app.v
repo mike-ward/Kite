@@ -1,7 +1,6 @@
 module models
 
 import bsky
-import extra
 import gx
 import ui
 import sync
@@ -43,7 +42,7 @@ pub fn (mut app App) login(name string, password string, on_login fn (mut app Ap
 	on_login(mut app)
 }
 
-pub fn (app App) change_view(view &ui.Widget) {
+pub fn (mut app App) change_view(view &ui.Widget) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
 		stack.remove()
 		stack.add(children: [view])
@@ -80,7 +79,6 @@ fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
 
 	for {
 		if time.since(refresh_time) > ten_minutes {
-			extra.trace('refresh_session')
 			app.refresh_session()
 			refresh_time = time.now()
 		}

@@ -81,9 +81,10 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		}
 
 		if post.image_path.len > 0 {
-			post_ui << v_space()
 			mut pic := ui.picture(path: post.image_path, use_cache: false)
-			pic.offset_x = v_scrollbar_width
+			// These hardcoded offsets look good to my eye.
+			pic.offset_x = 7
+			pic.offset_y = 3
 			post_ui << pic
 		}
 
@@ -92,10 +93,10 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			text_size:    text_size_small
 			text_color:   app.txt_color_dim
 			line_spacing: line_spacing_small
+			offset_y:     if post.image_path.len > 0 { 4 } else { 0 }
 		)
 
-		post_ui << v_space()
-		post_ui << widgets.h_line(color: app.hline_color)
+		post_ui << widgets.h_line(color: app.hline_color, offset_y: 2)
 		posts << ui.column(
 			id:       post.id
 			spacing:  5
@@ -112,29 +113,27 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 // draw_timeline is used in Window's on_draw() function
 // so it can occur on the UI thread or crashes happen.
 pub fn draw_timeline(mut w ui.Window, mut app App) {
-	// app.timeline_posts shared with timeline_loop thread
+	mut up_button_notice := false
+	mut sv_stack := w.get[ui.Stack](id_timeline_scrollview) or { return }
+	mut tl_stack := w.get[ui.Stack](id_timeline) or { return }
+
 	app.timeline_posts_mutex.lock()
-	defer { app.timeline_posts_mutex.unlock() }
-	mut notice := false
 
 	if app.timeline_posts.len > 0 {
-		notice = app.timeline_posts[0].id != app.first_post_id
 		app.timeline_up_button.notice = true
-		if mut tl := w.get[ui.Stack](id_timeline_scrollview) {
-			if (tl.has_scrollview && tl.scrollview.offset_y == 0) || !tl.has_scrollview {
-				if mut stack := w.get[ui.Stack](id_timeline) {
-					for stack.children.len > 0 {
-						stack.remove()
-					}
-					stack.add(children: app.timeline_posts)
-				}
-				app.first_post_id = app.timeline_posts[0].id
-				app.timeline_posts.clear()
-				notice = false
-				app.timeline_up_button.notice = false
+		up_button_notice = app.timeline_posts[0].id != app.first_post_id
+		if sv_stack.scrollview.offset_y == 0 {
+			for tl_stack.children.len > 0 {
+				tl_stack.remove()
 			}
+			tl_stack.add(children: app.timeline_posts)
+			app.first_post_id = app.timeline_posts[0].id
+			app.timeline_posts.clear()
+			up_button_notice = false
 		}
 	}
+
+	app.timeline_posts_mutex.unlock()
 
 	// This is a little hacky. Couldn't get canvas to
 	// behave with timeline components so use windows's
@@ -146,35 +145,23 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 	if app.timeline_up_button == unsafe { nil } {
 		mut up_button := widgets.up_button(
 			id:           id_up_button
-			x:            x
-			y:            y
 			radius:       radius
 			bg_color:     app.bg_color
 			fg_color:     app.txt_color_bold
 			border_color: app.txt_color_link
-			on_click:     fn [w] (_ &widgets.UpButton) {
-				if mut tl := w.get[ui.Stack](id_timeline_scrollview) {
-					if tl.has_scrollview {
-						tl.scrollview.set(0, .btn_y)
-					}
-				}
+			on_click:     fn [mut sv_stack] (_ &widgets.UpButton) {
+				sv_stack.scrollview.set(0, .btn_y)
 			}
 		)
-		app.window.add_top_layer(up_button)
 		// add_top_layer() does not init and register widgets. Bug?
+		app.window.add_top_layer(up_button)
 		up_button.init(w.top_layer)
 		w.register_child(*up_button)
 		app.timeline_up_button = up_button
 	}
 	app.timeline_up_button.set_pos(x, y)
-	app.timeline_up_button.notice = notice
-	if mut tls := w.get[ui.Stack](id_timeline_scrollview) {
-		app.timeline_up_button.set_visible(tls.scrollview.offset_y != 0)
-	}
-}
-
-fn v_space() ui.Widget {
-	return ui.rectangle(height: 0)
+	app.timeline_up_button.notice = up_button_notice
+	app.timeline_up_button.set_visible(sv_stack.scrollview.offset_y > 0)
 }
 
 fn author_timestamp_text(post Post) string {

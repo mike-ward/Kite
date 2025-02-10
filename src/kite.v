@@ -5,6 +5,8 @@ import time
 import ui
 
 fn main() {
+	extra.install_kite_segmentation_fault_handler()
+
 	mut app := &App{}
 	app.settings = Settings.load_settings()
 

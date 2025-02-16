@@ -6,9 +6,10 @@ import time
 pub fn install_kite_segmentation_fault_handler() {
 	start := time.now()
 	handler := fn [start] (signal os.Signal) {
-		t := time.now()
+		now := time.now()
+		elapsed := now - start
 		signal_number := int(signal)
-		eprintln('signal ${signal_number}: segmentation fault: ${t} (${t - start})')
+		eprintln('signal ${signal_number}: segmentation fault: ${now} (${elapsed})')
 		print_backtrace()
 		exit(128 + signal_number)
 	}

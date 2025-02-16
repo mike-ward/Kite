@@ -52,8 +52,11 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			text_size:  text_size
 			text_color: app.txt_color_bold
 			word_wrap:  true
-			on_click:   fn [post] () {
-				os.open_uri(post.bsky_link) or { ui.message_box(err.msg()) }
+			on_click:   fn [post, mut app] () {
+				if !app.is_click_handled() {
+					os.open_uri(post.bsky_link) or { ui.message_box(err.msg()) }
+					app.set_click_handled()
+				}
 			}
 		)
 
@@ -74,8 +77,11 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 				text_color:   app.txt_color_link
 				line_spacing: line_spacing_small
 				word_wrap:    true
-				on_click:     fn [post] () {
-					os.open_uri(post.link_uri) or { ui.message_box(err.msg()) }
+				on_click:     fn [post, mut app] () {
+					if !app.is_click_handled() {
+						os.open_uri(post.link_uri) or { ui.message_box(err.msg()) }
+						app.set_click_handled()
+					}
 				}
 			)
 		}
@@ -139,9 +145,6 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 	// behave with timeline components so use windows's
 	// top_layer canvas to host up_button.
 	radius := 19
-	diameter := radius * 2
-	x := app.window.width - diameter
-	y := app.window.height - diameter
 	if app.timeline_up_button == unsafe { nil } {
 		mut up_button := widgets.up_button(
 			id:           id_up_button
@@ -149,8 +152,11 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 			bg_color:     app.bg_color
 			fg_color:     app.txt_color_bold
 			border_color: app.txt_color_link
-			on_click:     fn [mut sv_stack] (_ &widgets.UpButton) {
-				sv_stack.scrollview.set(0, .btn_y)
+			on_click:     fn [mut sv_stack, mut app] (_ &widgets.UpButton) {
+				if !app.is_click_handled() {
+					sv_stack.scrollview.set(0, .btn_y)
+					app.set_click_handled()
+				}
 			}
 		)
 		// add_top_layer() does not init and register widgets. Bug?
@@ -159,6 +165,9 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 		w.register_child(*up_button)
 		app.timeline_up_button = up_button
 	}
+	offset := radius + 10
+	x := app.window.width - offset
+	y := app.window.height - offset
 	app.timeline_up_button.set_pos(x, y)
 	app.timeline_up_button.notice = up_button_notice
 	app.timeline_up_button.set_visible(sv_stack.scrollview.offset_y > 0)

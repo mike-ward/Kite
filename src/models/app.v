@@ -14,6 +14,8 @@ pub type BuildTimelineFn = fn (timeline Timeline, mut app App)
 
 @[heap]
 pub struct App {
+mut:
+	click_handled bool
 pub mut:
 	window               &ui.Window = unsafe { nil }
 	settings             Settings
@@ -94,4 +96,21 @@ fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
 
 		time.sleep(time.minute)
 	}
+}
+
+// As a rule, once a click is handled, I don't want other click handlers to run.
+// There is not a way currently to stop a click event from propagating to other
+// click handlers so this hack will have to do for now.
+pub fn (mut app App) set_click_handled() {
+	app.click_handled = true
+	go app.unset_click_handled()
+}
+
+fn (mut app App) unset_click_handled() {
+	time.sleep(50 * time.millisecond)
+	app.click_handled = false
+}
+
+pub fn (mut app App) is_click_handled() bool {
+	return app.click_handled
 }

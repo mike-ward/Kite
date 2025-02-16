@@ -50,7 +50,7 @@ fn main() {
 			save_settings_debounced()
 
 			// Timeline view draws at scroll pos zero instead of the current
-			// scroll pos on resizes. Likely a bug in VUI. For now, Setting
+			// scroll pos on resizes. Likely a bug in VUI. For now, setting
 			// the scroll pos manually forces Timeline view to draw at the
 			// desired scroll pos
 			if mut sv_stack := win.get[ui.Stack](views.id_timeline_scrollview) {

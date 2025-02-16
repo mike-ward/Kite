@@ -172,7 +172,8 @@ fn (mut ll LinkLabel) set_size() {
 	if ll.word_wrap {
 		mut wp, _ := ll.parent.size()
 		mut dtw := ui.DrawTextWidget(ll)
-		right_padding := 10
+		margin := if mut ll.parent is ui.Stack { ll.parent.margins } else { ui.Margins{} }
+		right_padding := 10 + ll.offset_x + int(margin.right) + int(margin.left)
 		ll.text = extra.wrap_text(ll.text, wp - right_padding, mut dtw)
 	}
 	ll.width, ll.height = ll.adj_size()

@@ -1,0 +1,28 @@
+		struct embed {
+		pub:
+		record struct {
+		pub:
+			type   string @[json: '\$type']
+			author struct {
+			pub:
+				did          string
+				handle       string
+				display_name string @[json: 'displayName']
+			}
+			value  struct {
+			pub:
+				type  string @[json: '\$type']
+				embed struct {
+				pub:
+					type       string @[json: '\$type']
+					created_at string @[json: 'createdAt']
+					text       string
+					external   struct {
+					pub:
+						description string
+						title       string
+						uri         string
+					}
+				}
+			}
+		}

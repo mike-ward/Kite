@@ -67,6 +67,34 @@ pub:
 				}
 			}
 		}
+		embed   struct {
+		pub:
+			type   string @[json: '\$type']
+			record struct {
+			pub:
+				type   string @[json: '\$type']
+				author struct {
+				pub:
+					handle       string
+					display_name string @[json: 'displayName']
+				}
+				value  struct {
+				pub:
+					type       string @[json: '\$type']
+					created_at string @[json: 'createdAt']
+					text       string
+					embed      struct {
+					pub:
+						type     string @[json: '\$type']
+						external struct {
+						pub:
+							title string
+							uri   string
+						}
+					}
+				}
+			}
+		}
 		replies int @[json: 'replyCount']
 		likes   int @[json: 'likeCount']
 		reposts int @[json: 'repostCount']

@@ -18,19 +18,24 @@ pub:
 
 pub struct Post {
 pub:
-	id         string
-	author     string
-	created_at time.Time
-	text       string
-	link_uri   string
-	link_title string
-	image_path string
-	image_alt  string
-	repost_by  string
-	replies    int
-	reposts    int
-	likes      int
-	bsky_link  string
+	id                    string
+	author                string
+	created_at            time.Time
+	text                  string
+	link_uri              string
+	link_title            string
+	image_path            string
+	image_alt             string
+	repost_by             string
+	replies               int
+	reposts               int
+	likes                 int
+	bsky_link             string
+	embed_post_author     string
+	embed_post_created_at time.Time
+	embed_post_text       string
+	embed_post_link_title string
+	embed_post_link_uri   string
 }
 
 pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline, max_posts int) Timeline {
@@ -60,20 +65,28 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 	path, alt := post_image(post)
 	bsky_link := bluesky_post_link(post)
 
+	// println(post.post.embed.record.value.embed.type)
+	e_uri, e_title := get_embed_post_link(post)
+
 	return Post{
-		id:         post.post.uri
-		author:     if d_name.len > 0 { d_name } else { handle }
-		created_at: time.parse_iso8601(post.post.record.created_at) or { time.utc() }
-		text:       post.post.record.text
-		link_uri:   uri
-		link_title: title
-		image_path: path
-		image_alt:  alt
-		repost_by:  repost_by(post)
-		replies:    post.post.replies
-		reposts:    post.post.reposts + post.post.quotes
-		likes:      post.post.likes
-		bsky_link:  bsky_link
+		id:                    post.post.uri
+		author:                if d_name.len > 0 { d_name } else { handle }
+		created_at:            time.parse_iso8601(post.post.record.created_at) or { time.utc() }
+		text:                  post.post.record.text
+		link_uri:              uri
+		link_title:            title
+		image_path:            path
+		image_alt:             alt
+		repost_by:             repost_by(post)
+		replies:               post.post.replies
+		reposts:               post.post.reposts + post.post.quotes
+		likes:                 post.post.likes
+		bsky_link:             bsky_link
+		embed_post_author:     get_embed_post_author(post)
+		embed_post_created_at: get_embed_post_created_at(post)
+		embed_post_text:       get_embed_post_text(post)
+		embed_post_link_title: e_title
+		embed_post_link_uri:   e_uri
 	}
 }
 
@@ -152,6 +165,41 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 			}
 		}
 	}
+}
+
+fn has_embed_post(post bsky.BlueskyPost) bool {
+	return post.post.embed.record.type.contains('#viewRecord')
+		&& post.post.embed.record.value.type.contains('post')
+}
+
+fn get_embed_post_author(post bsky.BlueskyPost) string {
+	if has_embed_post(post) {
+		handle := post.post.embed.record.author.handle
+		name := post.post.embed.record.author.display_name
+		return if handle.len > 0 { handle } else { name }
+	}
+	return ''
+}
+
+fn get_embed_post_created_at(post bsky.BlueskyPost) time.Time {
+	if has_embed_post(post) {
+		return time.parse_iso8601(post.post.embed.record.value.created_at) or { time.Time{} }
+	}
+	return time.Time{}
+}
+
+fn get_embed_post_text(post bsky.BlueskyPost) string {
+	if has_embed_post(post) {
+		return post.post.embed.record.value.text
+	}
+	return ''
+}
+
+fn get_embed_post_link(post bsky.BlueskyPost) (string, string) {
+	if has_embed_post(post) && post.post.embed.record.value.embed.type.contains('external') {
+		return post.post.embed.record.value.embed.external.uri, post.post.embed.record.value.embed.external.title
+	}
+	return '', ''
 }
 
 fn image_tmp_file_path(cid string) string {

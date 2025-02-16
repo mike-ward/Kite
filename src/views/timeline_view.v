@@ -70,6 +70,36 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			)
 		}
 
+		if post.embed_post_author.len > 0 {
+			post_ui << ui.row(
+				heights:  [ui.stretch, ui.stretch]
+				children: [
+					ui.rectangle(
+						width: 1
+						color: app.hline_color
+					),
+					ui.column(
+						spacing:  5
+						margin:   ui.Margin{0, 0, 0, v_scrollbar_width}
+						children: [
+							widgets.link_label(
+								text:       author_timestamp_text_embed(post)
+								text_size:  text_size
+								text_color: app.txt_color_bold
+								word_wrap:  true
+							),
+							widgets.link_label(
+								text:       extra.sanitize_text(post.embed_post_text)
+								text_size:  text_size
+								text_color: app.txt_color
+								word_wrap:  true
+							),
+						]
+					),
+				]
+			)
+		}
+
 		if post.link_uri.len > 0 && post.link_title.len > 0 {
 			post_ui << widgets.link_label(
 				text:         extra.sanitize_text(post.link_title)
@@ -165,7 +195,7 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 		w.register_child(*up_button)
 		app.timeline_up_button = up_button
 	}
-	offset := radius + 10
+	offset := radius + v_scrollbar_width
 	x := app.window.width - offset
 	y := app.window.height - offset
 	app.timeline_up_button.set_pos(x, y)
@@ -176,6 +206,16 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 fn author_timestamp_text(post Post) string {
 	author := extra.remove_non_ascii(post.author)
 	time_short := post.created_at
+		.utc_to_local()
+		.relative_short()
+		.fields()[0]
+	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
+	return extra.truncate_long_fields('${author} • ${time_stamp}')
+}
+
+fn author_timestamp_text_embed(post Post) string {
+	author := extra.remove_non_ascii(post.embed_post_author)
+	time_short := post.embed_post_created_at
 		.utc_to_local()
 		.relative_short()
 		.fields()[0]

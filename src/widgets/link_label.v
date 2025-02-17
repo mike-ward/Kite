@@ -73,7 +73,8 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 	ll.parent = parent
 	ll.ui = parent.get_ui()
 	ll.load_style()
-	ll.set_size()
+	w, h := parent.size()
+	ll.set_size(w, h)
 	if ll.on_click != LinkLabelClickFn(0) {
 		mut subscriber := parent.get_subscriber()
 		subscriber.subscribe_method(ui.events.on_click, ll_click, ll)
@@ -116,7 +117,7 @@ fn (mut ll LinkLabel) set_pos(x int, y int) {
 }
 
 fn (mut ll LinkLabel) propose_size(w int, h int) (int, int) {
-	ll.set_size()
+	ll.set_size(w, h)
 	ll.ax, ll.ay = ll.width, ll.height
 	return ll.size()
 }
@@ -167,15 +168,11 @@ fn dim_color(color gx.Color) gx.Color {
 	return gx.rgb(u8(f64(color.r) * dim), u8(f64(color.g) * dim), u8(f64(color.b) * dim))
 }
 
-fn (mut ll LinkLabel) set_size() {
+fn (mut ll LinkLabel) set_size(w int, h int) {
 	if ll.word_wrap {
-		mut wp, _ := ll.parent.size()
-		if wp < 250 {
-			wp = 250
-		}
 		mut dtw := ui.DrawTextWidget(ll)
 		dtw.load_style()
-		ll.text = extra.wrap_text(ll.text, wp - 10, mut dtw)
+		ll.text = extra.wrap_text(ll.text, w - 10, mut dtw)
 	}
 	ll.width, ll.height = ll.adj_size()
 }

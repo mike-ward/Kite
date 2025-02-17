@@ -174,6 +174,7 @@ fn (mut ll LinkLabel) set_size(w int, h int) {
 		dtw.load_style()
 		ll.text = extra.wrap_text(ll.text, w - 10, mut dtw)
 	}
+
 	ll.width, ll.height = ll.adj_size()
 }
 

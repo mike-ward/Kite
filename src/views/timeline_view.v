@@ -15,7 +15,7 @@ pub fn create_timeline_view(mut app App) &ui.Widget {
 	// Extra column layout required to work around some
 	// rendering issues with VUI. Early alpha issues
 	// that will likely go away at some point.
-	return ui.column(
+	tl := ui.column(
 		id:         id_timeline_scrollview
 		scrollview: true
 		margin:     ui.Margin{0, 0, 0, v_scrollbar_width}
@@ -26,6 +26,13 @@ pub fn create_timeline_view(mut app App) &ui.Widget {
 			),
 		]
 	)
+
+	has, mut sv := ui.get_scrollview(tl)
+	if has {
+		sv.is_focused = true
+	}
+
+	return tl
 }
 
 fn build_timeline_posts(timeline Timeline, mut app App) {
@@ -73,7 +80,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		if post.embed_post_author.len > 0 && post.embed_post_text.len > 0 {
 			post_ui << ui.row(
 				heights:  [ui.stretch, ui.stretch]
-				widths:   [ui.compact, ui.compact]
+				widths:   [ui.compact, ui.stretch]
 				children: [
 					ui.rectangle(
 						width: 1
@@ -85,13 +92,13 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 						children: [
 							widgets.link_label(
 								text:       author_timestamp_text_embed(post)
-								text_size:  text_size
+								text_size:  text_size_small
 								text_color: app.txt_color_bold
 								word_wrap:  true
 							),
 							widgets.link_label(
 								text:       extra.sanitize_text(post.embed_post_text)
-								text_size:  text_size
+								text_size:  text_size_small
 								text_color: app.txt_color
 								word_wrap:  true
 							),
@@ -210,7 +217,7 @@ fn author_timestamp_text(post Post) string {
 		.utc_to_local()
 		.relative_short()
 		.fields()[0]
-	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
+	time_stamp := if time_short == '0m' { 'now' } else { time_short }
 	return extra.truncate_long_fields('${author} • ${time_stamp}')
 }
 

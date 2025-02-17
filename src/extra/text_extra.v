@@ -43,16 +43,8 @@ pub fn remove_www_links(s string) string {
 	return s
 }
 
-pub fn remove_http_links(s string) string {
-	if mut query := regex.regex_opt(http_pattern) {
-		return query.replace(s, '')
-	}
-	return s
-}
-
 pub fn sanitize_text(s string) string {
-	h := remove_http_links(s)
-	l := remove_www_links(h)
+	l := remove_www_links(s)
 	t := truncate_long_fields(l)
 	return remove_non_ascii(t)
 }
@@ -73,14 +65,14 @@ pub fn short_size(size int) string {
 	return size.str()
 }
 
-pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) string {
-	mut wrap := ''
+pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) []string {
+	mut wrap := []string{}
 	mut line := ''
 	for f in s.fields() {
 		field := f.trim_space()
-		tw := dtw.text_width(line + ' ' + field)
-		if tw >= width_dip {
-			wrap += '${line}\n'
+		width := dtw.text_width(line + ' ' + field)
+		if width >= width_dip {
+			wrap << line
 			line = field
 		} else {
 			line += match line.len > 0 {
@@ -91,10 +83,7 @@ pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) string {
 	}
 	line = line.trim_space()
 	if line.len > 0 {
-		wrap += line
+		wrap << line
 	}
-	return match wrap.len > 0 {
-		true { wrap }
-		else { ' ' }
-	}
+	return wrap
 }

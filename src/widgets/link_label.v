@@ -12,6 +12,7 @@ pub type LinkLabelClickFn = fn ()
 pub struct LinkLabel implements ui.Widget, ui.DrawTextWidget {
 mut:
 	text         string
+	lines        []string
 	theme_style  string
 	style        ui.LabelStyle
 	style_params ui.LabelStyleParams
@@ -92,7 +93,7 @@ fn (mut ll LinkLabel) cleanup() {
 
 // ll_mouse_move called only if on_click is set
 fn ll_mouse_move(mut ll LinkLabel, e &ui.MouseMoveEvent, window &ui.Window) {
-	if ll.has_focus() {
+	if ll.app_has_focus() {
 		is_over := ll.point_inside(e.x, e.y)
 		if is_over && !ll.is_over {
 			sapp.set_mouse_cursor(sapp.MouseCursor.pointing_hand)
@@ -117,8 +118,8 @@ fn (mut ll LinkLabel) set_pos(x int, y int) {
 }
 
 fn (mut ll LinkLabel) propose_size(w int, h int) (int, int) {
+	// println('${w}, ${h}')
 	ll.set_size(w, h)
-	ll.ax, ll.ay = ll.width, ll.height
 	return ll.size()
 }
 
@@ -130,8 +131,8 @@ fn (mut ll LinkLabel) point_inside(x f64, y f64) bool {
 	// vfmt off
         return x >= ll.x + ll.offset_x &&
                y >= ll.y + ll.offset_y &&
-               x <= ll.x + ll.offset_x + ll.width &&
-               y <= ll.y + ll.offset_y + ll.height
+               x <= ll.x + ll.width &&
+               y <= ll.y + ll.height
 	// vfmt on
 }
 
@@ -146,7 +147,7 @@ fn (mut ll LinkLabel) draw() {
 fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(dd)
-	if ll.on_click != LinkLabelClickFn(0) && ll.has_focus() {
+	if ll.on_click != LinkLabelClickFn(0) && ll.app_has_focus() {
 		text_color := ll.style_params.text_color
 		dtw.text_styles.current.color = match ll.is_over {
 			true { dim_color(text_color) }
@@ -155,7 +156,7 @@ fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
 	}
 	x := ll.x + ll.offset_x
 	mut y := ll.y + ll.offset_y
-	for line in ll.text.split('\n') {
+	for line in ll.lines {
 		dtw.draw_device_text(dd, x, y, line)
 		y += ll.line_height
 	}
@@ -163,18 +164,14 @@ fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
 
 // --- non-interface stuff
 
-fn dim_color(color gx.Color) gx.Color {
-	dim := 0.85
-	return gx.rgb(u8(f64(color.r) * dim), u8(f64(color.g) * dim), u8(f64(color.b) * dim))
-}
-
 fn (mut ll LinkLabel) set_size(w int, h int) {
 	if ll.word_wrap {
 		mut dtw := ui.DrawTextWidget(ll)
 		dtw.load_style()
-		ll.text = extra.wrap_text(ll.text, w - 10, mut dtw)
+		ll.lines = extra.wrap_text(ll.text, w - 10, mut dtw)
+	} else {
+		ll.lines = [ll.text.fields().join(' ')]
 	}
-
 	ll.width, ll.height = ll.adj_size()
 }
 
@@ -183,14 +180,14 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 	mut w := 0
 	mut h := 0
 	ll.line_height = dtw.text_height('W') + ll.line_spacing
-	for line in ll.text.split('\n') {
+	for line in ll.lines {
 		wl := dtw.text_width(line)
 		if wl > w {
 			w = wl
 		}
 		h += ll.line_height
 	}
-	assert w > 0 && h > 0
+	assert h == ll.line_height * ll.lines.len // w can be zero if text is empty
 	return w + ll.offset_x, h + ll.offset_y
 }
 
@@ -218,6 +215,11 @@ fn (mut ll LinkLabel) update_style(p ui.LabelStyleParams) {
 	dtw.update_theme_style_params(p)
 }
 
-fn (ll LinkLabel) has_focus() bool {
+fn dim_color(color gx.Color) gx.Color {
+	dim := 0.85
+	return gx.rgb(u8(f64(color.r) * dim), u8(f64(color.g) * dim), u8(f64(color.b) * dim))
+}
+
+fn (ll LinkLabel) app_has_focus() bool {
 	return ll.ui.window.locked_focus.len > 0
 }

@@ -79,8 +79,9 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.embed_post_author.len > 0 && post.embed_post_text.len > 0 {
 			post_ui << ui.row(
-				heights:  [ui.stretch, ui.stretch]
 				widths:   [ui.compact, ui.stretch]
+				heights:  [ui.stretch, ui.stretch]
+				spacing:  v_scrollbar_width
 				children: [
 					ui.rectangle(
 						width: 1
@@ -88,7 +89,6 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 					),
 					ui.column(
 						spacing:  5
-						margin:   ui.Margin{0, 0, 0, v_scrollbar_width}
 						children: [
 							widgets.link_label(
 								text:       author_timestamp_text_embed(post)

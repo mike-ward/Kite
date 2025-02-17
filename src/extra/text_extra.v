@@ -36,7 +36,8 @@ pub fn remove_non_ascii(s string) string {
 
 pub fn remove_www_links(s string) string {
 	if mut query := regex.regex_opt(r'www\.\S+') {
-		return query.replace(s, '')
+		ss := query.replace(s, '')
+		return ss.replace('https://', '')
 	}
 	return s
 }
@@ -76,10 +77,10 @@ pub fn short_size(size int) string {
 pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) string {
 	mut wrap := ''
 	mut line := ''
-	dtw.load_style()
-	for field in s.fields() {
+	for f in s.fields() {
+		field := f.trim_space()
 		tw := dtw.text_width(line + ' ' + field)
-		if tw > width_dip {
+		if tw >= width_dip {
 			wrap += '${line}\n'
 			line = field
 		} else {

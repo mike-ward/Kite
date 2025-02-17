@@ -2,7 +2,6 @@ module widgets
 
 import extra
 import gx
-import math
 import sokol.sapp
 import ui
 
@@ -119,11 +118,11 @@ fn (mut ll LinkLabel) set_pos(x int, y int) {
 fn (mut ll LinkLabel) propose_size(w int, h int) (int, int) {
 	ll.set_size()
 	ll.ax, ll.ay = ll.width, ll.height
-	return ll.width, ll.height
+	return ll.size()
 }
 
 fn (mut ll LinkLabel) size() (int, int) {
-	return ll.width + ll.offset_x, ll.height + ll.offset_y
+	return ll.width, ll.height
 }
 
 fn (mut ll LinkLabel) point_inside(x f64, y f64) bool {
@@ -143,9 +142,9 @@ fn (mut ll LinkLabel) draw() {
 	ll.draw_device(mut ll.ui.dd)
 }
 
-fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
+fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
 	mut dtw := ui.DrawTextWidget(ll)
-	dtw.draw_device_load_style(d)
+	dtw.draw_device_load_style(dd)
 	if ll.on_click != LinkLabelClickFn(0) && ll.has_focus() {
 		text_color := ll.style_params.text_color
 		dtw.text_styles.current.color = match ll.is_over {
@@ -156,7 +155,7 @@ fn (mut ll LinkLabel) draw_device(mut d ui.DrawDevice) {
 	x := ll.x + ll.offset_x
 	mut y := ll.y + ll.offset_y
 	for line in ll.text.split('\n') {
-		dtw.draw_device_text(d, x, y, line)
+		dtw.draw_device_text(dd, x, y, line)
 		y += ll.line_height
 	}
 }
@@ -171,10 +170,12 @@ fn dim_color(color gx.Color) gx.Color {
 fn (mut ll LinkLabel) set_size() {
 	if ll.word_wrap {
 		mut wp, _ := ll.parent.size()
+		if wp < 250 {
+			wp = 250
+		}
 		mut dtw := ui.DrawTextWidget(ll)
-		margin := if mut ll.parent is ui.Stack { ll.parent.margins } else { ui.Margins{} }
-		right_padding := 10 + ll.offset_x + int(margin.right) + int(margin.left)
-		ll.text = extra.wrap_text(ll.text, wp - right_padding, mut dtw)
+		dtw.load_style()
+		ll.text = extra.wrap_text(ll.text, wp - 10, mut dtw)
 	}
 	ll.width, ll.height = ll.adj_size()
 }
@@ -185,10 +186,14 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 	mut h := 0
 	ll.line_height = dtw.text_height('W') + ll.line_spacing
 	for line in ll.text.split('\n') {
-		w = if line.len > 0 { math.max(dtw.text_width(line), w) } else { w }
+		wl := dtw.text_width(line)
+		if wl > w {
+			w = wl
+		}
 		h += ll.line_height
 	}
-	return w, h
+	assert w > 0 && h > 0
+	return w + ll.offset_x, h + ll.offset_y
 }
 
 fn (mut ll LinkLabel) load_style() {

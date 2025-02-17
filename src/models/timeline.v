@@ -176,7 +176,7 @@ fn get_embed_post_author(post bsky.BlueskyPost) string {
 	if has_embed_post(post) {
 		handle := post.post.embed.record.author.handle
 		name := post.post.embed.record.author.display_name
-		return if handle.len > 0 { handle } else { name }
+		return if name.len > 0 { name } else { handle }
 	}
 	return ''
 }

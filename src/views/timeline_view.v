@@ -70,9 +70,10 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			)
 		}
 
-		if post.embed_post_author.len > 0 {
+		if post.embed_post_author.len > 0 && post.embed_post_text.len > 0 {
 			post_ui << ui.row(
 				heights:  [ui.stretch, ui.stretch]
+				widths:   [ui.compact, ui.compact]
 				children: [
 					ui.rectangle(
 						width: 1

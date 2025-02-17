@@ -17,6 +17,7 @@ pub fn truncate_long_fields(s string) string {
 pub fn remove_non_ascii(s string) string {
 	// convert smart quotes to regular quotes
 	s1 := arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
+		// These characters don't work with VUi for now
 		return elem
 			.replace('“', '"')
 			.replace('”', '"')
@@ -41,8 +42,6 @@ pub fn remove_www_links(s string) string {
 	}
 	return s
 }
-
-const http_pattern = r'[$|\W](https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*[-a-zA-Z0-9@%_\+~#//=])?)'
 
 pub fn remove_http_links(s string) string {
 	if mut query := regex.regex_opt(http_pattern) {

@@ -6,6 +6,7 @@ import os
 import ui
 import widgets
 
+const post_spacing = 5
 const v_scrollbar_width = 10
 const id_timeline = 'timeline'
 const id_up_button = '_up_button_'
@@ -47,19 +48,21 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		if post.repost_by.len > 0 {
 			post_ui << widgets.link_label(
 				text:         extra.sanitize_text('reposted by ${post.repost_by}')
+				word_wrap:    true
 				text_size:    text_size_small
 				text_color:   app.txt_color_dim
+				wrap_shrink:  v_scrollbar_width
 				line_spacing: line_spacing_small
-				word_wrap:    true
 			)
 		}
 
 		post_ui << widgets.link_label(
-			text:       author_timestamp_text(post)
-			text_size:  text_size
-			text_color: app.txt_color_bold
-			word_wrap:  true
-			on_click:   fn [post, mut app] () {
+			text:        author_timestamp_text(post)
+			text_size:   text_size
+			text_color:  app.txt_color_bold
+			word_wrap:   true
+			wrap_shrink: v_scrollbar_width
+			on_click:    fn [post, mut app] () {
 				if !app.is_click_handled() {
 					os.open_uri(post.bsky_link) or { ui.message_box(err.msg()) }
 					app.set_click_handled()
@@ -70,17 +73,18 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		record_text := extra.sanitize_text(post.text)
 		if record_text.len > 0 {
 			post_ui << widgets.link_label(
-				text:       record_text
-				text_size:  text_size
-				text_color: app.txt_color
-				word_wrap:  true
+				text:        record_text
+				word_wrap:   true
+				text_size:   text_size
+				text_color:  app.txt_color
+				wrap_shrink: v_scrollbar_width
 			)
 		}
 
-		if post.embed_post_author.len > 0 && post.embed_post_text.len > 0 {
+		embed_text := extra.sanitize_text(post.embed_post_text)
+		if post.embed_post_author.len > 0 && embed_text.len > 0 {
 			post_ui << ui.row(
 				widths:   [ui.compact, ui.stretch]
-				heights:  [ui.stretch, ui.stretch]
 				spacing:  v_scrollbar_width
 				children: [
 					ui.rectangle(
@@ -88,19 +92,22 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 						color: app.hline_color
 					),
 					ui.column(
-						spacing:  5
+						spacing:  post_spacing
+						clipping: true
 						children: [
 							widgets.link_label(
-								text:       author_timestamp_text_embed(post)
-								text_size:  text_size_small
-								text_color: app.txt_color_bold
-								word_wrap:  true
+								text:        author_timestamp_text_embed(post)
+								word_wrap:   true
+								text_size:   text_size_small
+								text_color:  app.txt_color_bold
+								wrap_shrink: v_scrollbar_width + 5
 							),
 							widgets.link_label(
-								text:       extra.sanitize_text(post.embed_post_text)
-								text_size:  text_size_small
-								text_color: app.txt_color
-								word_wrap:  true
+								text:        embed_text
+								word_wrap:   true
+								text_size:   text_size_small
+								text_color:  app.txt_color
+								wrap_shrink: v_scrollbar_width + 5
 							),
 						]
 					),
@@ -111,10 +118,11 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		if post.link_uri.len > 0 && post.link_title.len > 0 {
 			post_ui << widgets.link_label(
 				text:         extra.sanitize_text(post.link_title)
+				word_wrap:    true
 				text_size:    text_size_small
 				text_color:   app.txt_color_link
+				wrap_shrink:  v_scrollbar_width
 				line_spacing: line_spacing_small
-				word_wrap:    true
 				on_click:     fn [post, mut app] () {
 					if !app.is_click_handled() {
 						os.open_uri(post.link_uri) or { ui.message_box(err.msg()) }
@@ -125,7 +133,10 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		}
 
 		if post.image_path.len > 0 {
-			mut pic := ui.picture(path: post.image_path, use_cache: false)
+			mut pic := ui.picture(
+				path:      post.image_path
+				use_cache: false
+			)
 			// These hardcoded offsets look good to my eye.
 			pic.offset_x = 7
 			pic.offset_y = 3
@@ -143,7 +154,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		post_ui << widgets.h_line(color: app.hline_color, offset_y: 2)
 		posts << ui.column(
 			id:       post.id
-			spacing:  5
+			spacing:  post_spacing
 			children: post_ui
 		)
 	}

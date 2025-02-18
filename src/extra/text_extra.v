@@ -35,16 +35,19 @@ pub fn remove_non_ascii(s string) string {
 	return s1
 }
 
-pub fn remove_www_links(s string) string {
-	if mut query := regex.regex_opt(r'www\.\S+') {
-		ss := query.replace(s, '')
-		return ss.replace('https://', '')
+pub fn remove_links(s string) string {
+	if mut www := regex.regex_opt(r'www\.\S+') {
+		mut ss := www.replace(s, '')
+		if mut https := regex.regex_opt(r'https://\S+') {
+			ss = https.replace(ss, '')
+		}
+		return ss
 	}
 	return s
 }
 
 pub fn sanitize_text(s string) string {
-	l := remove_www_links(s)
+	l := remove_links(s)
 	t := truncate_long_fields(l)
 	return remove_non_ascii(t)
 }
@@ -68,9 +71,11 @@ pub fn short_size(size int) string {
 pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) []string {
 	mut wrap := []string{}
 	mut line := ''
-	for f in s.fields() {
-		field := f.trim_space()
-		width := dtw.text_width(line + ' ' + field)
+	for field in s.fields() {
+		width := match line.len > 0 {
+			true { dtw.text_width(line + ' ' + field) }
+			else { dtw.text_width(field) }
+		}
 		if width >= width_dip {
 			wrap << line
 			line = field
@@ -81,9 +86,6 @@ pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) []string {
 			}
 		}
 	}
-	line = line.trim_space()
-	if line.len > 0 {
-		wrap << line
-	}
+	wrap << line
 	return wrap
 }

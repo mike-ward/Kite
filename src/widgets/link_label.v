@@ -20,6 +20,7 @@ mut:
 	line_spacing int              = line_spacing_default
 	on_click     LinkLabelClickFn = LinkLabelClickFn(0)
 	word_wrap    bool
+	wrap_shrink  int
 	is_over      bool
 	// DrawTextWidget interface
 	text_styles ui.TextStyles
@@ -52,6 +53,7 @@ pub:
 	offset_y     int
 	on_click     LinkLabelClickFn = LinkLabelClickFn(0)
 	word_wrap    bool
+	wrap_shrink  int
 }
 
 pub fn link_label(c LinkLabelParams) &LinkLabel {
@@ -65,6 +67,7 @@ pub fn link_label(c LinkLabelParams) &LinkLabel {
 		offset_y:     c.offset_y
 		on_click:     c.on_click
 		word_wrap:    c.word_wrap
+		wrap_shrink:  c.wrap_shrink
 	}
 	ll.style_params.style = c.theme
 	return ll
@@ -118,7 +121,6 @@ fn (mut ll LinkLabel) set_pos(x int, y int) {
 }
 
 fn (mut ll LinkLabel) propose_size(w int, h int) (int, int) {
-	// println('${w}, ${h}')
 	ll.set_size(w, h)
 	return ll.size()
 }
@@ -168,7 +170,7 @@ fn (mut ll LinkLabel) set_size(w int, h int) {
 	if ll.word_wrap {
 		mut dtw := ui.DrawTextWidget(ll)
 		dtw.load_style()
-		ll.lines = extra.wrap_text(ll.text, w - 10, mut dtw)
+		ll.lines = extra.wrap_text(ll.text, w - ll.wrap_shrink, mut dtw)
 	} else {
 		ll.lines = [ll.text.fields().join(' ')]
 	}
@@ -176,9 +178,9 @@ fn (mut ll LinkLabel) set_size(w int, h int) {
 }
 
 fn (mut ll LinkLabel) adj_size() (int, int) {
-	mut dtw := ui.DrawTextWidget(ll)
 	mut w := 0
 	mut h := 0
+	mut dtw := ui.DrawTextWidget(ll)
 	ll.line_height = dtw.text_height('W') + ll.line_spacing
 	for line in ll.lines {
 		wl := dtw.text_width(line)
@@ -192,7 +194,10 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 }
 
 fn (mut ll LinkLabel) load_style() {
-	mut style := if ll.theme_style.len == 0 { ll.ui.window.theme_style } else { ll.theme_style }
+	mut style := match ll.theme_style.len == 0 {
+		true { ll.ui.window.theme_style }
+		else { ll.theme_style }
+	}
 	if ll.style_params.style != ui.no_style {
 		style = ll.style_params.style
 	}
@@ -217,7 +222,7 @@ fn (mut ll LinkLabel) update_style(p ui.LabelStyleParams) {
 
 fn dim_color(color gx.Color) gx.Color {
 	dim := 0.85
-	return gx.rgb(u8(f64(color.r) * dim), u8(f64(color.g) * dim), u8(f64(color.b) * dim))
+	return gx.rgb(u8(color.r * dim), u8(color.g * dim), u8(color.b * dim))
 }
 
 fn (ll LinkLabel) app_has_focus() bool {

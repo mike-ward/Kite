@@ -101,6 +101,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 								text_size:   text_size_small
 								text_color:  app.txt_color_bold
 								wrap_shrink: v_scrollbar_width + 5
+								on_click:    embed_post_link_click_handler(post, mut app)
 							),
 							widgets.link_label(
 								text:        embed_text
@@ -125,8 +126,8 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 				line_spacing: line_spacing_small
 				on_click:     fn [post, mut app] () {
 					if !app.is_click_handled() {
-						os.open_uri(post.link_uri) or { ui.message_box(err.msg()) }
 						app.set_click_handled()
+						os.open_uri(post.link_uri) or { ui.message_box(err.msg()) }
 					}
 				}
 			)
@@ -193,28 +194,10 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 	// This is a little hacky. Couldn't get canvas to
 	// behave with timeline components so use windows's
 	// top_layer canvas to host up_button.
-	radius := 19
 	if app.timeline_up_button == unsafe { nil } {
-		mut up_button := widgets.up_button(
-			id:           id_up_button
-			radius:       radius
-			bg_color:     app.bg_color
-			fg_color:     app.txt_color_bold
-			border_color: app.txt_color_link
-			on_click:     fn [mut sv_stack, mut app] (_ &widgets.UpButton) {
-				if !app.is_click_handled() {
-					sv_stack.scrollview.set(0, .btn_y)
-					app.set_click_handled()
-				}
-			}
-		)
-		// add_top_layer() does not init and register widgets. Bug?
-		app.window.add_top_layer(up_button)
-		up_button.init(w.top_layer)
-		w.register_child(*up_button)
-		app.timeline_up_button = up_button
+		app.timeline_up_button = create_up_button(mut sv_stack, mut w, mut app)
 	}
-	offset := radius + v_scrollbar_width
+	offset := app.timeline_up_button.radius + v_scrollbar_width
 	x := app.window.width - offset
 	y := app.window.height - offset
 	app.timeline_up_button.set_pos(x, y)
@@ -246,4 +229,39 @@ fn post_counts(post Post) string {
 	return '• replies ${extra.short_size(post.replies)} ' +
 		'• reposts ${extra.short_size(post.reposts)} ' +
 		'• likes ${extra.short_size(post.likes)}'
+}
+
+fn embed_post_link_click_handler(post Post, mut app App) widgets.LinkLabelClickFn {
+	if post.embed_post_link_uri.len == 0 {
+		return widgets.LinkLabelClickFn(0)
+	}
+
+	return fn [post, mut app] () {
+		if !app.is_click_handled() {
+			app.set_click_handled()
+			os.open_uri(post.embed_post_link_uri) or { ui.message_box(err.msg()) }
+		}
+	}
+}
+
+fn create_up_button(mut sv_stack ui.Stack, mut w ui.Window, mut app App) &widgets.UpButton {
+	mut up_button := widgets.up_button(
+		id:           id_up_button
+		radius:       19
+		bg_color:     app.bg_color
+		fg_color:     app.txt_color_bold
+		border_color: app.txt_color_link
+		on_click:     fn [mut sv_stack, mut app] (_ &widgets.UpButton) {
+			if !app.is_click_handled() {
+				sv_stack.scrollview.set(0, .btn_y)
+				app.set_click_handled()
+			}
+		}
+	)
+	// add_top_layer() does not init and register widgets. Bug?
+	app.window.add_top_layer(up_button)
+	up_button.init(w.top_layer)
+	w.register_child(*up_button)
+	app.timeline_up_button = up_button
+	return up_button
 }

@@ -99,7 +99,10 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 								text:        author_timestamp_text_embed(post)
 								word_wrap:   true
 								text_size:   text_size_small
-								text_color:  app.txt_color_bold
+								text_color:  match post.embed_post_link_uri.len > 0 {
+									true { app.txt_color_link }
+									false { app.txt_color_bold }
+								}
 								wrap_shrink: v_scrollbar_width + 5
 								on_click:    embed_post_link_click_handler(post, mut app)
 							),
@@ -179,10 +182,13 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 		app.timeline_up_button.notice = true
 		up_button_notice = app.timeline_posts[0].id != app.first_post_id
 		if sv_stack.scrollview.offset_y == 0 {
-			for tl_stack.children.len > 0 {
+			// Removing and then adding causes faults occassionly.
+			// Adding and then removing seems to be more stable.
+			mut len := tl_stack.children.len
+			tl_stack.add(children: app.timeline_posts, at: 0)
+			for len-- > 0 {
 				tl_stack.remove()
 			}
-			tl_stack.add(children: app.timeline_posts)
 			app.first_post_id = app.timeline_posts[0].id
 			app.timeline_posts.clear()
 			up_button_notice = false

@@ -3,6 +3,7 @@ module bsky
 import json
 import net.http
 import time
+import os
 
 const error_title = 'kite error'
 
@@ -121,7 +122,10 @@ pub fn get_timeline(session BlueskySession) !BlueskyTimeline {
 		)
 	)!
 
-	// println(response.body)
+	$if bsky ? {
+		os.write_file('response_body.json', response.body) or {}
+	}
+
 	return match response.status() {
 		// vfmt off
 		.ok          { json.decode(BlueskyTimeline, response.body) }

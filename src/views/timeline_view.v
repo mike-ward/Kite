@@ -8,32 +8,15 @@ import widgets
 
 const post_spacing = 5
 const v_scrollbar_width = 10
-const id_timeline = 'timeline'
 const id_up_button = '_up_button_'
 pub const id_timeline_scrollview = 'timeline_scrollview'
 
 pub fn create_timeline_view(mut app App) &ui.Widget {
-	// Extra column layout required to work around some
-	// rendering issues with VUI. Early alpha issues
-	// that will likely go away at some point.
-	tl := ui.column(
+	return ui.column(
 		id:         id_timeline_scrollview
 		scrollview: true
 		margin:     ui.Margin{0, 0, 0, v_scrollbar_width}
-		children:   [
-			ui.column(
-				id:     id_timeline
-				margin: ui.Margin{3, 0, 0, 0}
-			),
-		]
 	)
-
-	has, mut sv := ui.get_scrollview(tl)
-	if has {
-		sv.is_focused = true
-	}
-
-	return tl
 }
 
 fn build_timeline_posts(timeline Timeline, mut app App) {
@@ -169,33 +152,29 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 	app.timeline_posts_mutex.unlock()
 }
 
-// draw_timeline is used in Window's on_draw() function
-// so it can occur on the UI thread or crashes happen.
+// draw_timeline is used in Window's on_draw()
+// function so it can occur on the UI thread
 pub fn draw_timeline(mut w ui.Window, mut app App) {
 	mut up_button_notice := false
 	mut sv_stack := w.get[ui.Stack](id_timeline_scrollview) or { return }
-	mut tl_stack := w.get[ui.Stack](id_timeline) or { return }
 
 	app.timeline_posts_mutex.lock()
+	defer { app.timeline_posts_mutex.unlock() }
 
 	if app.timeline_posts.len > 0 {
 		app.timeline_up_button.notice = true
 		up_button_notice = app.timeline_posts[0].id != app.first_post_id
 		if sv_stack.scrollview.offset_y == 0 {
-			// Removing and then adding causes faults occassionly.
-			// Adding and then removing seems to be more stable.
-			mut len := tl_stack.children.len
-			tl_stack.add(children: app.timeline_posts, at: 0)
-			for len-- > 0 {
-				tl_stack.remove()
-			}
+			sv_stack.remove()
+			mut tl := ui.column(margin: ui.Margin{3, 0, 0, 0})
+			sv_stack.add(children: [tl])
+			tl.add(children: app.timeline_posts)
+
 			app.first_post_id = app.timeline_posts[0].id
-			app.timeline_posts.clear()
+			app.timeline_posts = []
 			up_button_notice = false
 		}
 	}
-
-	app.timeline_posts_mutex.unlock()
 
 	// This is a little hacky. Couldn't get canvas to
 	// behave with timeline components so use windows's

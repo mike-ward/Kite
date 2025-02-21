@@ -29,6 +29,7 @@ pub mut:
 	txt_color_bold       gx.Color = gx.rgb(0xfe, 0xfe, 0xfe)
 	txt_color_link       gx.Color = gx.rgb(0x64, 0x95, 0xed)
 	hline_color          gx.Color = gx.rgb(0x50, 0x50, 0x50)
+	hline_color_first    gx.Color = gx.rgb(0x34, 0x65, 0xad)
 }
 
 pub fn (mut app App) login(name string, password string, on_login fn (mut app App)) {

@@ -1,5 +1,6 @@
 module views
 
+import arrays
 import models { App, Post, Timeline }
 import extra
 import os
@@ -25,7 +26,11 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 	line_spacing_small := 3
 	mut posts := []ui.Widget{cap: timeline.posts.len + 1}
 
-	for post in timeline.posts {
+	first_post_idx := -1 + arrays.index_of_first(timeline.posts, fn [app] (_ int, post Post) bool {
+		return post.id == app.first_post_id
+	})
+
+	for idx, post in timeline.posts {
 		mut post_ui := []ui.Widget{cap: 10}
 
 		if post.repost_by.len > 0 {
@@ -138,7 +143,11 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			offset_y:     if post.image_path.len > 0 { 4 } else { 0 }
 		)
 
-		post_ui << widgets.h_line(color: app.hline_color, offset_y: 2)
+		h_color := match first_post_idx == idx {
+			true { app.hline_color_first }
+			else { app.hline_color }
+		}
+		post_ui << widgets.h_line(color: h_color, offset_y: 2)
 		posts << ui.column(
 			id:       post.id
 			spacing:  post_spacing

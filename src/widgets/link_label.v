@@ -208,7 +208,7 @@ fn (mut ll LinkLabel) load_style() {
 }
 
 fn (mut ll LinkLabel) update_theme_style(theme string) {
-	style := if theme.len == 0 { 'default' } else { theme }
+	style := if theme == '' { 'default' } else { theme }
 	if style != ui.no_style && style in ll.ui.styles {
 		ls := ll.ui.styles[style].label
 		ll.theme_style = theme

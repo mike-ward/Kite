@@ -34,14 +34,10 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		}
 		app.first_post_id = first_post_id
 	}
-
-	first_post_idx := -1 + arrays.index_of_first(timeline.posts, fn [app] (_ int, post Post) bool {
+	mut first_post_idx := arrays.index_of_first(timeline.posts, fn [app] (_ int, post Post) bool {
 		return post.id == app.old_post_id
 	})
-
-	// println(first_post_idx)
-	// println('old_post_id:   ${app.old_post_id}')
-	// println('first_post_id: ${app.first_post_id}')
+	first_post_idx -= 1
 
 	for idx, post in timeline.posts {
 		mut post_ui := []ui.Widget{cap: 10}
@@ -57,8 +53,12 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			)
 		}
 
+		mut author := author_timestamp_text(post)
+		if idx <= first_post_idx {
+			author = '» ' + author
+		}
 		post_ui << widgets.link_label(
-			text:        author_timestamp_text(post)
+			text:        author
 			text_size:   text_size
 			text_color:  app.txt_color_bold
 			word_wrap:   true
@@ -162,11 +162,10 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			offset_y:     if post.image_path.len > 0 { 4 } else { 0 }
 		)
 
-		h_color := match first_post_idx == idx {
-			true { app.hline_color_first }
-			else { app.hline_color }
-		}
-		post_ui << widgets.h_line(color: h_color, offset_y: 2)
+		post_ui << widgets.h_line(
+			color:    app.hline_color
+			offset_y: 2
+		)
 		posts << ui.column(
 			id:       post.id
 			spacing:  post_spacing

@@ -5,7 +5,7 @@ import time
 import os
 import stbi
 
-pub const image_width = 265
+pub const image_width = 278
 
 const kite_dir = 'kite'
 const image_prefix = 'kite_image'

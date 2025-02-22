@@ -140,9 +140,16 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		}
 
 		if post.image_path.len > 0 {
-			mut pic := ui.picture(path: post.image_path, use_cache: false)
-			// These hardcoded offsets look good to my eye.
-			pic.offset_x = 7
+			mut pic := ui.picture(
+				path:      post.image_path
+				use_cache: false
+				on_click:  fn [post, mut app] (_ &ui.Picture) {
+					if !app.is_click_handled() {
+						os.open_uri(post.bsky_link_uri) or { ui.message_box(err.msg()) }
+						app.set_click_handled()
+					}
+				}
+			)
 			pic.offset_y = 3
 			post_ui << pic
 		}

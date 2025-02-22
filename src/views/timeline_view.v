@@ -26,9 +26,22 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 	line_spacing_small := 3
 	mut posts := []ui.Widget{cap: timeline.posts.len + 1}
 
+	first_post_id := timeline.posts[0].id
+	if app.first_post_id != first_post_id {
+		app.old_post_id = match app.first_post_id.len == 0 {
+			true { first_post_id }
+			else { app.first_post_id }
+		}
+		app.first_post_id = first_post_id
+	}
+
 	first_post_idx := -1 + arrays.index_of_first(timeline.posts, fn [app] (_ int, post Post) bool {
-		return post.id == app.first_post_id
+		return post.id == app.old_post_id
 	})
+
+	// println(first_post_idx)
+	// println('old_post_id:   ${app.old_post_id}')
+	// println('first_post_id: ${app.first_post_id}')
 
 	for idx, post in timeline.posts {
 		mut post_ui := []ui.Widget{cap: 10}
@@ -172,14 +185,12 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 
 	if app.timeline_posts.len > 0 {
 		app.timeline_up_button.notice = true
-		up_button_notice = app.timeline_posts[0].id != app.first_post_id
+		up_button_notice = app.timeline_posts[0].id != app.old_post_id
 		if sv_stack.scrollview.offset_y == 0 {
 			sv_stack.remove()
 			mut tl := ui.column(margin: ui.Margin{3, 0, 0, 0})
 			sv_stack.add(children: [tl])
 			tl.add(children: app.timeline_posts)
-
-			app.first_post_id = app.timeline_posts[0].id
 			app.timeline_posts = []
 			up_button_notice = false
 		}

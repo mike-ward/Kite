@@ -23,6 +23,7 @@ pub mut:
 	timeline_posts_mutex &sync.Mutex       = sync.new_mutex()
 	timeline_up_button   &widgets.UpButton = unsafe { nil }
 	first_post_id        string
+	old_post_id          string
 	bg_color             gx.Color = gx.rgb(0x30, 0x30, 0x30)
 	txt_color            gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
 	txt_color_dim        gx.Color = gx.rgb(0x80, 0x80, 0x80)

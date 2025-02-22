@@ -189,7 +189,9 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 		}
 		h += ll.line_height
 	}
-	assert h == ll.line_height * ll.lines.len // w can be zero if text is empty
+	if w == 0 {
+		h = 0
+	}
 	return w + ll.offset_x, h + ll.offset_y
 }
 

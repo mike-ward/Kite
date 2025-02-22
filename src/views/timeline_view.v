@@ -65,7 +65,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			wrap_shrink: v_scrollbar_width
 			on_click:    fn [post, mut app] () {
 				if !app.is_click_handled() {
-					os.open_uri(post.bsky_link) or { ui.message_box(err.msg()) }
+					os.open_uri(post.bsky_link_uri) or { ui.message_box(err.msg()) }
 					app.set_click_handled()
 				}
 			}
@@ -84,38 +84,40 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		embed_text := extra.sanitize_text(post.embed_post_text)
 		if post.embed_post_author.len > 0 && embed_text.len > 0 {
+			embed_post := ui.column(
+				spacing:  post_spacing
+				clipping: true
+				children: [
+					widgets.link_label(
+						text:        author_timestamp_text_embed(post)
+						word_wrap:   true
+						text_size:   text_size_small
+						text_color:  app.txt_color_bold
+						wrap_shrink: v_scrollbar_width + 5
+					),
+					widgets.link_label(
+						text:        embed_text
+						word_wrap:   true
+						text_size:   text_size_small
+						text_color:  app.txt_color
+						wrap_shrink: v_scrollbar_width + 5
+					),
+					widgets.link_label(
+						text:        post.embed_post_link_title
+						word_wrap:   true
+						text_size:   text_size_small
+						text_color:  app.txt_color_link
+						wrap_shrink: v_scrollbar_width + 5
+						on_click:    embed_post_link_click_handler(post, mut app)
+					),
+				]
+			)
 			post_ui << ui.row(
 				widths:   [ui.compact, ui.stretch]
 				spacing:  v_scrollbar_width
 				children: [
-					ui.rectangle(
-						width: 1
-						color: app.hline_color
-					),
-					ui.column(
-						spacing:  post_spacing
-						clipping: true
-						children: [
-							widgets.link_label(
-								text:        author_timestamp_text_embed(post)
-								word_wrap:   true
-								text_size:   text_size_small
-								text_color:  match post.embed_post_link_uri.len > 0 {
-									true { app.txt_color_link }
-									false { app.txt_color_bold }
-								}
-								wrap_shrink: v_scrollbar_width + 5
-								on_click:    embed_post_link_click_handler(post, mut app)
-							),
-							widgets.link_label(
-								text:        embed_text
-								word_wrap:   true
-								text_size:   text_size_small
-								text_color:  app.txt_color
-								wrap_shrink: v_scrollbar_width + 5
-							),
-						]
-					),
+					ui.rectangle(width: 1, color: app.hline_color),
+					embed_post,
 				]
 			)
 		}
@@ -138,10 +140,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		}
 
 		if post.image_path.len > 0 {
-			mut pic := ui.picture(
-				path:      post.image_path
-				use_cache: false
-			)
+			mut pic := ui.picture(path: post.image_path, use_cache: false)
 			// These hardcoded offsets look good to my eye.
 			pic.offset_x = 7
 			pic.offset_y = 3

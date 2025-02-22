@@ -30,7 +30,7 @@ pub:
 	replies               int
 	reposts               int
 	likes                 int
-	bsky_link             string
+	bsky_link_uri         string
 	embed_post_author     string
 	embed_post_created_at time.Time
 	embed_post_text       string
@@ -63,9 +63,7 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 	d_name := post.post.author.display_name
 	uri, title := external_link(post)
 	path, alt := post_image(post)
-	bsky_link := bluesky_post_link(post)
-
-	// println(post.post.embed.record.value.embed.type)
+	bsky_link_uri := bluesky_post_link(post)
 	e_uri, e_title := get_embed_post_link(post)
 
 	return Post{
@@ -81,7 +79,7 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 		replies:               post.post.replies
 		reposts:               post.post.reposts + post.post.quotes
 		likes:                 post.post.likes
-		bsky_link:             bsky_link
+		bsky_link_uri:         bsky_link_uri
 		embed_post_author:     get_embed_post_author(post)
 		embed_post_created_at: get_embed_post_created_at(post)
 		embed_post_text:       get_embed_post_text(post)
@@ -196,8 +194,9 @@ fn get_embed_post_text(post bsky.BlueskyPost) string {
 }
 
 fn get_embed_post_link(post bsky.BlueskyPost) (string, string) {
-	if has_embed_post(post) && post.post.embed.record.value.embed.type.contains('external') {
-		return post.post.embed.record.value.embed.external.uri, post.post.embed.record.value.embed.external.title
+	embed := post.post.embed.record.value.embed
+	if has_embed_post(post) && embed.type.contains('external') {
+		return embed.external.uri, embed.external.title
 	}
 	return '', ''
 }

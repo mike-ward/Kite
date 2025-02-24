@@ -35,26 +35,8 @@ pub fn remove_non_ascii(s string) string {
 	return s1
 }
 
-pub fn remove_links(s string) string {
-	if mut www := regex.regex_opt(r'www\.\S+') {
-		mut ss := www.replace(s, '')
-		if mut https := regex.regex_opt(r'https://\S+') {
-			ss = https.replace(ss, '')
-		}
-		if mut youtube1 := regex.regex_opt(r'youtu\.be/\S+') {
-			ss = youtube1.replace(ss, '')
-		}
-		if mut youtube2 := regex.regex_opt(r'youtube\.com/\S+') {
-			ss = youtube2.replace(ss, '')
-		}
-		return ss
-	}
-	return s
-}
-
 pub fn sanitize_text(s string) string {
-	l := remove_links(s)
-	t := truncate_long_fields(l)
+	t := truncate_long_fields(s)
 	return remove_non_ascii(t)
 }
 

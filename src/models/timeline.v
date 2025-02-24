@@ -60,7 +60,18 @@ pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline, max_posts int) Timel
 fn from_bluesky_post(post bsky.BlueskyPost) Post {
 	handle := post.post.author.handle
 	d_name := post.post.author.display_name
-	uri, title := external_link(post)
+	mut text := post.post.record.text
+	mut uri, mut title := external_link(post)
+	inline_uri, byte_start, byte_end := inline_link(post)
+	if byte_end > 0 {
+		uri = inline_uri
+		title = text[byte_start..byte_end]
+		text = text[0..byte_start] + text[byte_end..]
+		// println('uri:   ${uri}')
+		// println('title: ${title}')
+		// println('text:  ${text}')
+		// println('------------')
+	}
 	path, alt := post_image(post)
 	bsky_link_uri := bluesky_post_link(post)
 	e_uri, e_title := get_embed_post_link(post)
@@ -69,7 +80,7 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 		id:                    post.post.uri
 		author:                if d_name.len > 0 { d_name } else { handle }
 		created_at:            time.parse_iso8601(post.post.record.created_at) or { time.utc() }
-		text:                  post.post.record.text
+		text:                  text
 		link_uri:              uri
 		link_title:            title
 		image_path:            path
@@ -202,6 +213,19 @@ fn get_embed_post_link(post bsky.BlueskyPost) (string, string) {
 
 fn image_tmp_file_path(cid string) string {
 	return os.join_path_single(image_tmp_dir, '${cid}.jpg')
+}
+
+fn inline_link(post bsky.BlueskyPost) (string, int, int) {
+	if post.post.record.facets.len > 0 {
+		if post.post.record.facets[0].features.len > 0 {
+			facet := post.post.record.facets[0]
+			feature := facet.features[0]
+			if feature.type.contains('#link') {
+				return feature.uri, facet.index.byte_start, facet.index.byte_end
+			}
+		}
+	}
+	return '', 0, 0
 }
 
 pub fn clear_image_cache() {

@@ -25,12 +25,12 @@ pub:
 		}
 		record  struct {
 		pub:
-			type       string @[json: '\$type']
+			type       string @[json: '\$type'] // app.bsky.feed.post
 			text       string
 			created_at string @[json: 'createdAt']
 			embed      struct {
 			pub:
-				type     string @[json: '\$type']
+				type     string @[json: '\$type'] // app.bsky.embed.images
 				images   []struct {
 				pub:
 					alt          string
@@ -54,6 +54,19 @@ pub:
 				pub:
 					title string
 					uri   string
+				}
+			}
+			facets     []struct {
+			pub:
+				features []struct {
+				pub:
+					type string @[json: '\$type'] // app.bsky.richtext.facet#link
+					uri  string
+				}
+				index    struct {
+				pub:
+					byte_start int @[json: 'byteStart']
+					byte_end   int @[json: 'byteEnd']
 				}
 			}
 			reply      struct {

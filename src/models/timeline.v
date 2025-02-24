@@ -8,7 +8,6 @@ import stbi
 pub const image_width = 278
 
 const kite_dir = 'kite'
-const image_prefix = 'kite_image'
 const image_tmp_dir = os.join_path(os.temp_dir(), kite_dir)
 
 pub struct Timeline {
@@ -202,20 +201,18 @@ fn get_embed_post_link(post bsky.BlueskyPost) (string, string) {
 }
 
 fn image_tmp_file_path(cid string) string {
-	return os.join_path_single(image_tmp_dir, '${image_prefix}_${cid}.jpg')
+	return os.join_path_single(image_tmp_dir, '${cid}.jpg')
 }
 
 pub fn clear_image_cache() {
-	entries := os.ls(image_tmp_dir) or { [] }
+	entries := os.ls(image_tmp_dir) or { return }
 	for entry in entries {
-		if entry.starts_with(image_prefix) {
-			path := os.join_path_single(image_tmp_dir, entry)
-			last := os.file_last_mod_unix(path)
-			date := time.unix(last)
-			diff := time.utc() - date
-			if diff > time.hour {
-				os.rm(path) or {}
-			}
+		path := os.join_path_single(image_tmp_dir, entry)
+		last := os.file_last_mod_unix(path)
+		date := time.unix(last)
+		diff := time.utc() - date
+		if diff > time.hour {
+			os.rm(path) or {}
 		}
 	}
 }

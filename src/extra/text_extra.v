@@ -41,6 +41,12 @@ pub fn remove_links(s string) string {
 		if mut https := regex.regex_opt(r'https://\S+') {
 			ss = https.replace(ss, '')
 		}
+		if mut youtube1 := regex.regex_opt(r'youtu\.be/\S+') {
+			ss = youtube1.replace(ss, '')
+		}
+		if mut youtube2 := regex.regex_opt(r'youtube\.com/\S+') {
+			ss = youtube2.replace(ss, '')
+		}
 		return ss
 	}
 	return s
@@ -69,21 +75,20 @@ pub fn short_size(size int) string {
 }
 
 pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) []string {
-	mut wrap := []string{}
 	mut line := ''
+	mut wrap := []string{cap: 5}
 	for field in s.fields() {
-		width := match line.len > 0 {
-			true { dtw.text_width(line + ' ' + field) }
-			else { dtw.text_width(field) }
+		if line == '' {
+			line = field
+			continue
 		}
+		nline := line + ' ' + field
+		width := dtw.text_width(nline)
 		if width >= width_dip {
 			wrap << line
 			line = field
 		} else {
-			line += match line.len > 0 {
-				true { ' ' + field }
-				else { field }
-			}
+			line = nline
 		}
 	}
 	wrap << line

@@ -7,7 +7,7 @@ import os
 import ui
 import widgets
 
-const post_spacing = 5
+const post_spacing = 4
 const v_scrollbar_width = 10
 const id_up_button = '_up_button_'
 pub const id_timeline_scrollview = 'timeline_scrollview'
@@ -50,6 +50,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 				text_color:   app.txt_color_dim
 				wrap_shrink:  v_scrollbar_width
 				line_spacing: line_spacing_small
+				offset_y:     -2
 			)
 		}
 
@@ -84,40 +85,42 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		embed_text := extra.sanitize_text(post.embed_post_text)
 		if post.embed_post_author.len > 0 && embed_text.len > 0 {
-			embed_post := ui.column(
-				spacing:  post_spacing
-				clipping: true
-				children: [
-					widgets.link_label(
-						text:        author_timestamp_text_embed(post)
-						word_wrap:   true
-						text_size:   text_size_small
-						text_color:  app.txt_color_bold
-						wrap_shrink: v_scrollbar_width + 5
-					),
-					widgets.link_label(
-						text:        embed_text
-						word_wrap:   true
-						text_size:   text_size_small
-						text_color:  app.txt_color
-						wrap_shrink: v_scrollbar_width + 5
-					),
-					widgets.link_label(
-						text:        post.embed_post_link_title
-						word_wrap:   true
-						text_size:   text_size_small
-						text_color:  app.txt_color_link
-						wrap_shrink: v_scrollbar_width + 5
-						on_click:    embed_post_link_click_handler(post, mut app)
-					),
-				]
-			)
 			post_ui << ui.row(
 				widths:   [ui.compact, ui.stretch]
 				spacing:  v_scrollbar_width
 				children: [
-					ui.rectangle(width: 1, color: app.hline_color),
-					embed_post,
+					ui.rectangle(
+						width: 1
+						color: app.hline_color
+					),
+					ui.column(
+						spacing:  post_spacing
+						clipping: true
+						children: [
+							widgets.link_label(
+								text:        author_timestamp_text_embed(post)
+								word_wrap:   true
+								text_size:   text_size_small
+								text_color:  app.txt_color_bold
+								wrap_shrink: v_scrollbar_width + 5
+							),
+							widgets.link_label(
+								text:        embed_text
+								word_wrap:   true
+								text_size:   text_size_small
+								text_color:  app.txt_color
+								wrap_shrink: v_scrollbar_width + 5
+							),
+							widgets.link_label(
+								text:        post.embed_post_link_title
+								word_wrap:   true
+								text_size:   text_size_small
+								text_color:  app.txt_color_link
+								wrap_shrink: v_scrollbar_width + 5
+								on_click:    embed_post_link_click_handler(post, mut app)
+							),
+						]
+					),
 				]
 			)
 		}
@@ -141,9 +144,8 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.image_path.len > 0 {
 			mut pic := ui.picture(
-				path:      post.image_path
-				use_cache: false
-				on_click:  fn [post, mut app] (_ &ui.Picture) {
+				path:     post.image_path
+				on_click: fn [post, mut app] (_ &ui.Picture) {
 					if !app.is_click_handled() {
 						os.open_uri(post.bsky_link_uri) or { ui.message_box(err.msg()) }
 						app.set_click_handled()
@@ -155,11 +157,10 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		}
 
 		post_ui << widgets.link_label(
-			text:         post_counts(post)
-			text_size:    text_size_small
-			text_color:   app.txt_color_dim
-			line_spacing: line_spacing_small
-			offset_y:     if post.image_path.len > 0 { 4 } else { 0 }
+			text:       post_counts(post)
+			text_size:  text_size_small
+			text_color: app.txt_color_dim
+			offset_y:   if post.image_path.len > 0 { 4 } else { 0 }
 		)
 
 		post_ui << widgets.h_line(

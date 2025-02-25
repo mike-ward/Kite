@@ -73,7 +73,7 @@ pub fn (mut app App) refresh_session() {
 }
 
 pub fn (mut app App) start_timeline(build_timeline_fn BuildTimelineFn) {
-	clear_image_cache()
+	prune_image_cache()
 	go app.timeline_loop(build_timeline_fn)
 }
 

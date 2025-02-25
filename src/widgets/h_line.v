@@ -82,6 +82,8 @@ fn (mut hl HLine) draw() {
 	hl.draw_device(mut hl.ui.dd)
 }
 
+const text_size = 12
+
 fn (mut hl HLine) draw_device(mut dd ui.DrawDevice) {
 	x1 := hl.x + hl.offset_x
 	y1 := hl.y + hl.offset_y
@@ -90,11 +92,11 @@ fn (mut hl HLine) draw_device(mut dd ui.DrawDevice) {
 
 	w := dd.text_width(hl.text)
 	x3 := x2 - w - 4
-	yt := y2 - 8
+	yt := y2 - (text_size - 4)
 
 	if hl.text.len > 0 {
 		dd.draw_text(x3, yt, hl.text, gx.TextCfg{
-			size:  12
+			size:  text_size
 			color: hl.text_color
 		})
 	}

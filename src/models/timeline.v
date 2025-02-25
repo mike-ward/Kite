@@ -67,10 +67,6 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 		uri = inline_uri
 		title = text[byte_start..byte_end]
 		text = text[0..byte_start] + text[byte_end..]
-		// println('uri:   ${uri}')
-		// println('title: ${title}')
-		// println('text:  ${text}')
-		// println('------------')
 	}
 	path, alt := post_image(post)
 	bsky_link_uri := bluesky_post_link(post)
@@ -228,7 +224,7 @@ fn inline_link(post bsky.BlueskyPost) (string, int, int) {
 	return '', 0, 0
 }
 
-pub fn clear_image_cache() {
+pub fn prune_image_cache() {
 	entries := os.ls(image_tmp_dir) or { return }
 	for entry in entries {
 		path := os.join_path_single(image_tmp_dir, entry)

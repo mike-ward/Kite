@@ -17,6 +17,14 @@ pub fn create_timeline_view(mut app App) &ui.Widget {
 		id:         id_timeline_scrollview
 		scrollview: true
 		margin:     ui.Margin{0, 0, 0, v_scrollbar_width}
+		children:   [
+			// ui.Stack does not like an empty child list. Removing
+			// and adding widgets can cause it to crash over time.
+			// Keeping a couple of widgets around can help prevent this.
+			// See draw_timeline()
+			widgets.link_label(text: ''),
+			widgets.link_label(text: ''),
+		]
 	)
 }
 
@@ -194,7 +202,7 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 		up_button_notice = app.timeline_posts[0].id != app.old_post_id
 		if sv_stack.scrollview.offset_y == 0 {
 			sv_stack.remove()
-			mut tl := ui.column(margin: ui.Margin{3, 0, 0, 0})
+			mut tl := ui.column()
 			sv_stack.add(children: [tl])
 			tl.add(children: app.timeline_posts)
 			app.timeline_posts = []

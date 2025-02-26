@@ -5,7 +5,6 @@ import gx
 import ui
 import sync
 import time
-import widgets
 
 const max_timeline_posts = 25
 pub const id_main_column = '_main-view-column_'
@@ -20,8 +19,7 @@ pub mut:
 	window               &ui.Window = unsafe { nil }
 	settings             Settings
 	timeline_posts       []ui.Widget
-	timeline_posts_mutex &sync.Mutex       = sync.new_mutex()
-	timeline_up_button   &widgets.UpButton = unsafe { nil }
+	timeline_posts_mutex &sync.Mutex = sync.new_mutex()
 	first_post_id        string
 	old_post_id          string
 	picture_cache        map[string]int
@@ -111,7 +109,7 @@ pub fn (mut app App) set_click_handled() {
 }
 
 fn (mut app App) unset_click_handled() {
-	time.sleep(50 * time.millisecond)
+	time.sleep(250 * time.millisecond)
 	app.click_handled = false
 }
 

@@ -10,16 +10,16 @@ Reacting or replying to posts is not supported. Instead, click on the post title
 ## Features
 - Updates timeline every minute
 - Displays images that are part of the original post.
+- Mouse wheel to scroll
+- Right click to scroll to top
 - Posts are displayed in a compact format by removing extra linebreaks and whitespace.
 
 ## Installing
 Install the V compiler from https://vlang.io
-
 ```
 git clone https://github.com/mike-ward/Kite
 cd kite
 v install ui
 v run .
 ```
-
 Kite relies on V's V-UI library, which is still in development.

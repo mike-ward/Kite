@@ -7,6 +7,7 @@ import sokol.sapp
 
 pub type UpButtonClickFn = fn (&UpButton)
 
+@[heap]
 pub struct UpButton implements ui.Widget {
 pub mut:
 	radius   int

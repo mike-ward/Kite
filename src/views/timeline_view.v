@@ -120,7 +120,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 								wrap_shrink: v_scrollbar_width + 5
 							),
 							widgets.link_label(
-								text:        post.embed_post_link_title
+								text:        extra.sanitize_text(post.embed_post_link_title)
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_link
@@ -151,6 +151,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		}
 
 		if post.image_path.len > 0 {
+			app.picture_cache[post.image_path] = 0
 			mut pic := ui.picture(
 				path:     post.image_path
 				on_click: fn [post, mut app] (_ &ui.Picture) {

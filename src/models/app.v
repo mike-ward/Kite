@@ -24,6 +24,7 @@ pub mut:
 	timeline_up_button   &widgets.UpButton = unsafe { nil }
 	first_post_id        string
 	old_post_id          string
+	picture_cache        map[string]int
 	bg_color             gx.Color = gx.rgb(0x30, 0x30, 0x30)
 	txt_color            gx.Color = gx.rgb(0xbb, 0xbb, 0xbb)
 	txt_color_dim        gx.Color = gx.rgb(0x80, 0x80, 0x80)
@@ -73,7 +74,7 @@ pub fn (mut app App) refresh_session() {
 }
 
 pub fn (mut app App) start_timeline(build_timeline_fn BuildTimelineFn) {
-	prune_image_cache()
+	prune_disk_image_cache()
 	go app.timeline_loop(build_timeline_fn)
 }
 
@@ -94,8 +95,9 @@ fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
 
 		get_timeline_images(bluesky_timeline)
 		timeline := from_bluesky_timeline(bluesky_timeline, max_timeline_posts)
-		build_timeline_fn(timeline, mut app)
 
+		build_timeline_fn(timeline, mut app)
+		app.prune_picture_cache(timeline.posts)
 		time.sleep(time.minute)
 	}
 }
@@ -115,4 +117,14 @@ fn (mut app App) unset_click_handled() {
 
 pub fn (mut app App) is_click_handled() bool {
 	return app.click_handled
+}
+
+pub fn (mut app App) prune_picture_cache(posts []Post) {
+	paths := posts.map(it.image_path).filter(it.len > 0)
+	for path in app.picture_cache.keys() {
+		if path !in paths {
+			// app.window.ui.picture_cache_delete(path)
+			app.picture_cache.delete(path)
+		}
+	}
 }

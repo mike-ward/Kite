@@ -9,6 +9,7 @@ const line_spacing_default = 5
 
 pub type LinkLabelClickFn = fn ()
 
+@[heap]
 pub struct LinkLabel implements ui.Widget, ui.DrawTextWidget {
 mut:
 	text         string

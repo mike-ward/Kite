@@ -116,10 +116,11 @@ fn repost_by(post bsky.BlueskyPost) string {
 
 fn external_link(post bsky.BlueskyPost) (string, string) {
 	external := post.post.record.embed.external
-	return match external.uri.len > 0 && external.title.trim_space().len > 0 {
-		true { external.uri, external.title.trim_space() }
-		else { '', '' }
+	if external.uri.len > 0 {
+		title := if external.title.len > 0 { external.title } else { external.uri }
+		return external.uri, title
 	}
+	return '', ''
 }
 
 // get_post_image downloads the first image blob assciated with the post
@@ -202,7 +203,8 @@ fn get_embed_post_text(post bsky.BlueskyPost) string {
 fn get_embed_post_link(post bsky.BlueskyPost) (string, string) {
 	embed := post.post.embed.record.value.embed
 	if has_embed_post(post) && embed.type.contains('external') {
-		return embed.external.uri, embed.external.title
+		title := if embed.external.title.len > 0 { embed.external.title } else { embed.external.uri }
+		return embed.external.uri, title
 	}
 	return '', ''
 }
@@ -224,7 +226,7 @@ fn inline_link(post bsky.BlueskyPost) (string, int, int) {
 	return '', 0, 0
 }
 
-pub fn prune_image_cache() {
+pub fn prune_disk_image_cache() {
 	entries := os.ls(image_tmp_dir) or { return }
 	for entry in entries {
 		path := os.join_path_single(image_tmp_dir, entry)

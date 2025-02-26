@@ -3,6 +3,7 @@ module widgets
 import ui
 import gx
 
+@[heap]
 pub struct HLine implements ui.Widget {
 	height int = 1
 mut:

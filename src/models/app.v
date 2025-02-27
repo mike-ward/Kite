@@ -1,5 +1,6 @@
 module models
 
+import arrays
 import bsky
 import gx
 import ui
@@ -18,7 +19,7 @@ mut:
 pub mut:
 	window               &ui.Window = unsafe { nil }
 	settings             Settings
-	timeline_posts       []ui.Widget
+	timeline_posts_ui    []ui.Widget
 	timeline_posts_mutex &sync.Mutex = sync.new_mutex()
 	first_post_id        string
 	old_post_id          string
@@ -125,4 +126,19 @@ pub fn (mut app App) prune_picture_cache(posts []Post) {
 			app.picture_cache.delete(path)
 		}
 	}
+}
+
+pub fn (mut app App) update_first_post(timeline Timeline) int {
+	first_post_id := timeline.posts[0].id
+	if app.first_post_id != first_post_id {
+		app.old_post_id = match app.first_post_id.len == 0 {
+			true { first_post_id }
+			else { app.first_post_id }
+		}
+		app.first_post_id = first_post_id
+	}
+	first_post_idx := arrays.index_of_first(timeline.posts, fn [app] (_ int, post Post) bool {
+		return post.id == app.old_post_id
+	})
+	return first_post_idx - 1
 }

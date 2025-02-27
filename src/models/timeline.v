@@ -10,11 +10,13 @@ pub const image_width = 278
 const kite_dir = 'kite'
 const image_tmp_dir = os.join_path(os.temp_dir(), kite_dir)
 
+@[heap]
 pub struct Timeline {
 pub:
 	posts []Post
 }
 
+@[heap]
 pub struct Post {
 pub:
 	id                    string

@@ -1,6 +1,5 @@
 module views
 
-import arrays
 import models { App, Post, Timeline }
 import extra
 import os
@@ -31,23 +30,15 @@ pub fn create_timeline_view(mut app App) &ui.Widget {
 }
 
 fn build_timeline_posts(timeline Timeline, mut app App) {
+	line_spacing_small := 3
 	text_size := app.settings.font_size
 	text_size_small := text_size - 2
-	line_spacing_small := 3
-	mut posts := []ui.Widget{cap: timeline.posts.len + 1}
 
-	first_post_id := timeline.posts[0].id
-	if app.first_post_id != first_post_id {
-		app.old_post_id = match app.first_post_id.len == 0 {
-			true { first_post_id }
-			else { app.first_post_id }
-		}
-		app.first_post_id = first_post_id
-	}
-	mut first_post_idx := arrays.index_of_first(timeline.posts, fn [app] (_ int, post Post) bool {
-		return post.id == app.old_post_id
-	})
-	first_post_idx -= 1
+	app.timeline_posts_mutex.lock()
+	defer { app.timeline_posts_mutex.unlock() }
+
+	first_post_idx := app.update_first_post(timeline)
+	mut posts_ui := []ui.Widget{cap: timeline.posts.len + 1}
 
 	for idx, post in timeline.posts {
 		mut post_ui := []ui.Widget{cap: 10}
@@ -66,7 +57,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		mut author := author_timestamp_text(post)
 		if idx <= first_post_idx {
-			author = '${r_chevron} ${author}'
+			author = '${r_chevron} ${author} ${l_chevron}'
 		}
 		post_ui << widgets.link_label(
 			text:        author
@@ -178,43 +169,39 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			color:    app.hline_color
 			offset_y: 2
 		)
-		posts << ui.column(
+		posts_ui << ui.column(
 			id:       post.id
 			spacing:  post_spacing
 			children: post_ui
 		)
 	}
 
-	// app.timeline_posts shared with UI thread
-	app.timeline_posts_mutex.lock()
-	app.timeline_posts = posts
-	app.timeline_posts_mutex.unlock()
+	app.timeline_posts_ui = posts_ui
 }
 
 // draw_timeline is used in Window's on_draw()
 // function so it can occur on the UI thread
 pub fn draw_timeline(mut w ui.Window, mut app App) {
-	mut notice := false
-	mut sv_stack := w.get[ui.Stack](id_timeline_scrollview) or { return }
-
 	app.timeline_posts_mutex.lock()
 	defer { app.timeline_posts_mutex.unlock() }
 
-	if app.timeline_posts.len > 0 {
-		notice = app.timeline_posts[0].id != app.old_post_id
-		if sv_stack.scrollview.offset_y == 0 {
-			sv_stack.remove()
-			mut tl := ui.column()
-			sv_stack.add(children: [tl])
-			tl.add(children: app.timeline_posts)
-			app.timeline_posts = []
-			notice = false
+	mut notice := false
+	if app.timeline_posts_ui.len > 0 {
+		notice = app.timeline_posts_ui[0].id != app.old_post_id
+		if mut sv_stack := w.get[ui.Stack](id_timeline_scrollview) {
+			if sv_stack.scrollview.offset_y == 0 {
+				sv_stack.remove()
+				mut tl := ui.column()
+				sv_stack.add(children: [tl])
+				tl.add(children: app.timeline_posts_ui)
+				app.timeline_posts_ui = []
+				notice = false
+			}
 		}
 	}
 
-	l_new := if notice { r_chevron } else { '' }
-	r_new := if notice { l_chevron } else { '' }
-	app.window.set_title('${l_new} Kite ${r_new}')
+	title := if notice { '${l_chevron} Kite ${r_chevron}' } else { 'Kite' }
+	app.window.set_title(title)
 }
 
 fn author_timestamp_text(post Post) string {

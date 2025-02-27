@@ -148,6 +148,9 @@ fn (mut ll LinkLabel) draw() {
 }
 
 fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
+	if ll.y == 0 {
+		return
+	}
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(dd)
 	if ll.on_click != LinkLabelClickFn(0) && ll.app_has_focus() {

@@ -3,9 +3,9 @@ module models
 import arrays
 import bsky
 import gx
-import ui
 import sync
 import time
+import ui
 
 const max_timeline_posts = 25
 pub const id_main_column = '_main-view-column_'
@@ -119,13 +119,24 @@ pub fn (mut app App) is_click_handled() bool {
 }
 
 pub fn (mut app App) prune_picture_cache(posts []Post) {
-	paths := posts.map(it.image_path).filter(it.len > 0)
-	for path in app.picture_cache.keys() {
-		if path !in paths {
-			// app.window.ui.picture_cache_delete(path)
-			app.picture_cache.delete(path)
+	if mut pic := find_pic_widget(app.window) {
+		paths := posts.map(it.image_path).filter(it.len > 0)
+		for path in app.picture_cache.keys() {
+			if path !in paths {
+				pic.remove_from_cache(path)
+				app.picture_cache.delete(path)
+			}
 		}
 	}
+}
+
+fn find_pic_widget(window ui.Window) ?&ui.Picture {
+	for _, w in window.widgets {
+		if w is ui.Picture {
+			return w
+		}
+	}
+	return none
 }
 
 pub fn (mut app App) update_first_post(timeline Timeline) int {

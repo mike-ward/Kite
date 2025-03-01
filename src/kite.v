@@ -1,11 +1,11 @@
 import models { App, Settings }
 import views
-import extra
+import xtra
 import time
 import ui
 
 fn main() {
-	extra.install_kite_segmentation_fault_handler()
+	xtra.install_kite_segmentation_fault_handler()
 
 	mut app := &App{}
 	app.settings = Settings.load_settings()
@@ -14,7 +14,7 @@ fn main() {
 		app.refresh_session()
 	}
 
-	save_settings_debounced := extra.debounce(fn [mut app] () {
+	save_settings_debounced := xtra.debounce(fn [mut app] () {
 		app.settings.save_settings()
 	}, time.second)
 

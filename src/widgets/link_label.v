@@ -1,6 +1,6 @@
 module widgets
 
-import extra
+import xtra
 import gx
 import sokol.sapp
 import ui
@@ -174,7 +174,7 @@ fn (mut ll LinkLabel) set_size(w int, h int) {
 	if ll.word_wrap {
 		mut dtw := ui.DrawTextWidget(ll)
 		dtw.load_style()
-		ll.lines = extra.wrap_text(ll.text, w - ll.wrap_shrink, mut dtw)
+		ll.lines = xtra.wrap_text(ll.text, w - ll.wrap_shrink, mut dtw)
 	} else {
 		ll.lines = [ll.text.fields().join(' ')]
 	}

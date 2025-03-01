@@ -2,7 +2,7 @@ module models
 
 import arrays
 import bsky
-import extra
+import xtra
 import gx
 import sync
 import time
@@ -124,7 +124,7 @@ pub fn (mut app App) prune_picture_cache(posts []Post) {
 		paths := posts.map(it.image_path).filter(it.len > 0)
 		for path in app.picture_cache.keys() {
 			if path !in paths {
-				extra.trace('prune_picture_cache')
+				xtra.trace('prune_picture_cache')
 				pic.remove_from_cache(path)
 				app.picture_cache.delete(path)
 			}

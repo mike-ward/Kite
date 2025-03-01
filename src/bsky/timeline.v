@@ -83,8 +83,8 @@ pub:
 		}
 		embed   struct {
 		pub:
-			type   string @[json: '\$type']
-			record struct {
+			type         string @[json: '\$type']
+			record       struct {
 			pub:
 				type   string @[json: '\$type']
 				author struct {
@@ -108,6 +108,13 @@ pub:
 					}
 				}
 			}
+			cid          string
+			thumbnail    string
+			aspect_ratio struct {
+			pub:
+				width  int
+				height int
+			} @[json: 'aspectRatio']
 		}
 		replies int @[json: 'replyCount']
 		likes   int @[json: 'likeCount']

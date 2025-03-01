@@ -1,7 +1,7 @@
 module views
 
 import models { App, Post, Timeline }
-import extra
+import xtra
 import os
 import time
 import ui
@@ -42,7 +42,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.repost_by.len > 0 {
 			post_ui << widgets.link_label(
-				text:        extra.sanitize_text('reposted by ${post.repost_by}')
+				text:        xtra.sanitize_text('reposted by ${post.repost_by}')
 				word_wrap:   true
 				text_size:   text_size_small
 				text_color:  app.txt_color_dim
@@ -69,7 +69,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			}
 		)
 
-		record_text := extra.sanitize_text(post.text)
+		record_text := xtra.sanitize_text(post.text)
 		if record_text.len > 0 {
 			post_ui << widgets.link_label(
 				text:        record_text
@@ -80,7 +80,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			)
 		}
 
-		embed_text := extra.sanitize_text(post.embed_post_text)
+		embed_text := xtra.sanitize_text(post.embed_post_text)
 		if post.embed_post_author.len > 0 && embed_text.len > 0 {
 			embed_author := author_timestamp_text(post.embed_post_author, post.embed_post_created_at)
 			post_ui << ui.row(
@@ -110,7 +110,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 								wrap_shrink: v_scrollbar_width + 5
 							),
 							widgets.link_label(
-								text:        extra.sanitize_text(post.embed_post_link_title)
+								text:        xtra.sanitize_text(post.embed_post_link_title)
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_link
@@ -125,7 +125,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.link_uri.len > 0 && post.link_title.len > 0 {
 			post_ui << widgets.link_label(
-				text:        extra.sanitize_text(post.link_title)
+				text:        xtra.sanitize_text(post.link_title)
 				word_wrap:   true
 				text_size:   text_size_small
 				text_color:  app.txt_color_link
@@ -202,19 +202,19 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 }
 
 fn author_timestamp_text(author string, created_at time.Time) string {
-	auth := extra.remove_non_ascii(author)
+	auth := xtra.remove_non_ascii(author)
 	time_short := created_at
 		.utc_to_local()
 		.relative_short()
 		.fields()[0]
 	timestamp := if time_short == '0m' { 'now' } else { time_short }
-	return extra.truncate_long_fields('${auth} • ${timestamp}')
+	return xtra.truncate_long_fields('${auth} • ${timestamp}')
 }
 
 fn post_counts(post Post) string {
-	return '• replies ${extra.short_size(post.replies)} ' +
-		'• reposts ${extra.short_size(post.reposts)} ' +
-		'• likes ${extra.short_size(post.likes)}'
+	return '• replies ${xtra.short_size(post.replies)} ' +
+		'• reposts ${xtra.short_size(post.reposts)} ' +
+		'• likes ${xtra.short_size(post.likes)}'
 }
 
 fn embed_post_link_click_handler(post Post, mut app App) widgets.LinkLabelClickFn {

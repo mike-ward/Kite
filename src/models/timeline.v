@@ -1,9 +1,11 @@
 module models
 
 import bsky
+import net.http
 import time
 import os
 import stbi
+import math
 
 pub const image_width = 278
 
@@ -136,9 +138,17 @@ fn post_image(post bsky.BlueskyPost) (string, string) {
 		if os.exists(tmp_file) {
 			return tmp_file, image.alt
 		}
+	} else if post.post.embed.thumbnail.len > 0 {
+		cid := post.post.embed.cid
+		tmp_file := image_tmp_file_path(cid)
+		if os.exists(tmp_file) {
+			return tmp_file, ''
+		}
 	}
 	return '', ''
 }
+
+const max_image_height = 300
 
 pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 	os.mkdir_all(image_tmp_dir) or { eprintln(err) }
@@ -166,9 +176,44 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 						eprintln(err)
 						continue
 					}
-					stbi.stbi_write_jpg(image_tmp_file, r_img.width, r_img.height, r_img.nr_channels,
+					height := math.min(max_image_height, r_img.height)
+					stbi.stbi_write_jpg(image_tmp_file, r_img.width, height, r_img.nr_channels,
 						r_img.data, 90) or { eprintln(err) }
 				}
+			}
+		} else if post.post.embed.thumbnail.len > 0 {
+			// println(post.post.embed.cid)
+			// println(post.post.embed.thumbnail)
+			// println(post.post.embed.aspect_ratio)
+			cid := post.post.embed.cid
+			image_tmp_file := image_tmp_file_path(cid)
+			if !os.exists(image_tmp_file) {
+				// println(image_tmp_file)
+				response := http.get(post.post.embed.thumbnail) or {
+					eprintln(err.msg())
+					continue
+				}
+				if response.status() != .ok {
+					eprintln(response.status())
+					continue
+				}
+				blob := response.body
+				m_img := stbi.load_from_memory(blob.str, blob.len) or {
+					eprintln(err)
+					continue
+				}
+				aspect_ratio := post.post.embed.aspect_ratio
+				ratio := match aspect_ratio.width != 0 && aspect_ratio.height != 0 {
+					true { f64(aspect_ratio.height) / f64(aspect_ratio.width) }
+					else { 1.0 }
+				}
+				r_img := stbi.resize_uint8(m_img, image_width, int(image_width * ratio)) or {
+					eprintln(err)
+					continue
+				}
+				height := math.min(max_image_height, r_img.height)
+				stbi.stbi_write_jpg(image_tmp_file, r_img.width, height, r_img.nr_channels,
+					r_img.data, 90) or { eprintln(err) }
 			}
 		}
 	}

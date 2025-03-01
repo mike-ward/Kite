@@ -5,7 +5,7 @@ import gx
 import sokol.sapp
 import ui
 
-const line_spacing_default = 5
+const line_spacing_default = 2
 
 pub type LinkLabelClickFn = fn ()
 
@@ -185,7 +185,7 @@ fn (mut ll LinkLabel) adj_size() (int, int) {
 	mut w := 0
 	mut h := 0
 	mut dtw := ui.DrawTextWidget(ll)
-	ll.line_height = dtw.text_height('W') + ll.line_spacing
+	ll.line_height = dtw.text_height('W|Q') + ll.line_spacing
 	for line in ll.lines {
 		wl := dtw.text_width(line)
 		if wl > w {

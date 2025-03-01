@@ -1,4 +1,7 @@
 .PHONY: all
 
 all:
-		v -gc boehm_full run . &
+	v run . &
+
+prod:
+	v -gc boehm_full_opt -prod .

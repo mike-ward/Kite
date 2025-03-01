@@ -2,6 +2,7 @@ module models
 
 import arrays
 import bsky
+import extra
 import gx
 import sync
 import time
@@ -49,7 +50,7 @@ pub fn (mut app App) login(name string, password string, on_login fn (mut app Ap
 pub fn (mut app App) change_view(view &ui.Widget) {
 	if mut stack := app.window.get[ui.Stack](id_main_column) {
 		stack.remove()
-		stack.add(children: [view])
+		stack.add(child: view)
 	} else {
 		eprintln('${@METHOD}(): id_main_column not found')
 	}
@@ -123,6 +124,7 @@ pub fn (mut app App) prune_picture_cache(posts []Post) {
 		paths := posts.map(it.image_path).filter(it.len > 0)
 		for path in app.picture_cache.keys() {
 			if path !in paths {
+				extra.trace('prune_picture_cache')
 				pic.remove_from_cache(path)
 				app.picture_cache.delete(path)
 			}

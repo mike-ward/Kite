@@ -3,6 +3,7 @@ module views
 import models { App, Post, Timeline }
 import extra
 import os
+import time
 import ui
 import widgets
 
@@ -30,12 +31,8 @@ pub fn create_timeline_view(mut app App) &ui.Widget {
 }
 
 fn build_timeline_posts(timeline Timeline, mut app App) {
-	line_spacing_small := 3
 	text_size := app.settings.font_size
 	text_size_small := text_size - 2
-
-	app.timeline_posts_mutex.lock()
-	defer { app.timeline_posts_mutex.unlock() }
 
 	first_post_idx := app.update_first_post(timeline)
 	mut posts_ui := []ui.Widget{cap: timeline.posts.len + 1}
@@ -45,17 +42,16 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.repost_by.len > 0 {
 			post_ui << widgets.link_label(
-				text:         extra.sanitize_text('reposted by ${post.repost_by}')
-				word_wrap:    true
-				text_size:    text_size_small
-				text_color:   app.txt_color_dim
-				wrap_shrink:  v_scrollbar_width
-				line_spacing: line_spacing_small
-				offset_y:     -2
+				text:        extra.sanitize_text('reposted by ${post.repost_by}')
+				word_wrap:   true
+				text_size:   text_size_small
+				text_color:  app.txt_color_dim
+				wrap_shrink: v_scrollbar_width
+				offset_y:    -2
 			)
 		}
 
-		mut author := author_timestamp_text(post)
+		mut author := author_timestamp_text(post.author, post.created_at)
 		if idx <= first_post_idx {
 			author = '${r_chevron} ${author} ${l_chevron}'
 		}
@@ -86,6 +82,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		embed_text := extra.sanitize_text(post.embed_post_text)
 		if post.embed_post_author.len > 0 && embed_text.len > 0 {
+			embed_author := author_timestamp_text(post.embed_post_author, post.embed_post_created_at)
 			post_ui << ui.row(
 				widths:   [ui.compact, ui.stretch]
 				spacing:  v_scrollbar_width
@@ -99,7 +96,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 						clipping: true
 						children: [
 							widgets.link_label(
-								text:        author_timestamp_text_embed(post)
+								text:        embed_author
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_bold
@@ -128,13 +125,12 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.link_uri.len > 0 && post.link_title.len > 0 {
 			post_ui << widgets.link_label(
-				text:         extra.sanitize_text(post.link_title)
-				word_wrap:    true
-				text_size:    text_size_small
-				text_color:   app.txt_color_link
-				wrap_shrink:  v_scrollbar_width
-				line_spacing: line_spacing_small
-				on_click:     fn [post, mut app] () {
+				text:        extra.sanitize_text(post.link_title)
+				word_wrap:   true
+				text_size:   text_size_small
+				text_color:  app.txt_color_link
+				wrap_shrink: v_scrollbar_width
+				on_click:    fn [post, mut app] () {
 					if !app.is_click_handled() {
 						app.set_click_handled()
 						os.open_uri(post.link_uri) or { ui.message_box(err.msg()) }
@@ -185,18 +181,19 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 	app.timeline_posts_mutex.lock()
 	defer { app.timeline_posts_mutex.unlock() }
 
-	mut notice := false
-	if app.timeline_posts_ui.len > 0 {
-		notice = app.timeline_posts_ui[0].id != app.old_post_id
-		if mut sv_stack := w.get[ui.Stack](id_timeline_scrollview) {
-			if sv_stack.scrollview.offset_y == 0 {
-				sv_stack.remove()
-				mut tl := ui.column()
-				sv_stack.add(children: [tl])
-				tl.add(children: app.timeline_posts_ui)
-				app.timeline_posts_ui = []
-				notice = false
-			}
+	if app.timeline_posts_ui.len == 0 {
+		return
+	}
+
+	mut notice := app.timeline_posts_ui[0].id != app.old_post_id
+	if mut sv_stack := w.get[ui.Stack](id_timeline_scrollview) {
+		if sv_stack.scrollview.offset_y == 0 {
+			sv_stack.remove()
+			mut tl := ui.column()
+			sv_stack.add(child: tl)
+			tl.add(children: app.timeline_posts_ui)
+			app.timeline_posts_ui = []
+			notice = false
 		}
 	}
 
@@ -204,24 +201,14 @@ pub fn draw_timeline(mut w ui.Window, mut app App) {
 	app.window.set_title(title)
 }
 
-fn author_timestamp_text(post Post) string {
-	author := extra.remove_non_ascii(post.author)
-	time_short := post.created_at
+fn author_timestamp_text(author string, created_at time.Time) string {
+	auth := extra.remove_non_ascii(author)
+	time_short := created_at
 		.utc_to_local()
 		.relative_short()
 		.fields()[0]
-	time_stamp := if time_short == '0m' { 'now' } else { time_short }
-	return extra.truncate_long_fields('${author} • ${time_stamp}')
-}
-
-fn author_timestamp_text_embed(post Post) string {
-	author := extra.remove_non_ascii(post.embed_post_author)
-	time_short := post.embed_post_created_at
-		.utc_to_local()
-		.relative_short()
-		.fields()[0]
-	time_stamp := if time_short == '0m' { '<1m' } else { time_short }
-	return extra.truncate_long_fields('${author} • ${time_stamp}')
+	timestamp := if time_short == '0m' { 'now' } else { time_short }
+	return extra.truncate_long_fields('${auth} • ${timestamp}')
 }
 
 fn post_counts(post Post) string {
@@ -234,7 +221,6 @@ fn embed_post_link_click_handler(post Post, mut app App) widgets.LinkLabelClickF
 	if post.embed_post_link_uri.len == 0 {
 		return widgets.LinkLabelClickFn(0)
 	}
-
 	return fn [post, mut app] () {
 		if !app.is_click_handled() {
 			app.set_click_handled()

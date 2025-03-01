@@ -65,7 +65,7 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 	mut text := post.post.record.text
 	mut uri, mut title := external_link(post)
 	inline_uri, byte_start, byte_end := inline_link(post)
-	if byte_end > 0 {
+	if byte_end > 0 && byte_end < text.len && byte_start >= 0 && byte_start < byte_end {
 		uri = inline_uri
 		title = text[byte_start..byte_end]
 		text = text[0..byte_start] + text[byte_end..]

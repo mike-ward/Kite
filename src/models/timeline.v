@@ -7,8 +7,6 @@ import os
 import stbi
 import math
 
-pub const image_width = 278
-
 const kite_dir = 'kite'
 const image_tmp_dir = os.join_path(os.temp_dir(), kite_dir)
 
@@ -147,8 +145,6 @@ fn post_image(post bsky.BlueskyPost) (string, string) {
 	}
 	return '', ''
 }
-
-const max_image_height = 300
 
 pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 	os.mkdir_all(image_tmp_dir) or { eprintln(err) }

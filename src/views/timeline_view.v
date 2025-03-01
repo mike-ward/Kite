@@ -10,7 +10,6 @@ import widgets
 const r_chevron = '»'
 const l_chevron = '«'
 const post_spacing = 4
-const v_scrollbar_width = 10
 const id_up_button = '_up_button_'
 pub const id_timeline_scrollview = 'timeline_scrollview'
 
@@ -18,7 +17,7 @@ pub fn create_timeline_view(mut app App) &ui.Widget {
 	return ui.column(
 		id:         id_timeline_scrollview
 		scrollview: true
-		margin:     ui.Margin{0, 0, 0, v_scrollbar_width}
+		margin:     ui.Margin{0, 0, 0, models.v_scrollbar_width}
 		children:   [
 			// ui.Stack does not like an empty child list. Removing
 			// and adding widgets can cause it to crash over time.
@@ -46,7 +45,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 				word_wrap:   true
 				text_size:   text_size_small
 				text_color:  app.txt_color_dim
-				wrap_shrink: v_scrollbar_width
+				wrap_shrink: models.v_scrollbar_width
 				offset_y:    -2
 			)
 		}
@@ -60,7 +59,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			text_size:   text_size
 			text_color:  app.txt_color_bold
 			word_wrap:   true
-			wrap_shrink: v_scrollbar_width
+			wrap_shrink: models.v_scrollbar_width
 			on_click:    fn [post, mut app] () {
 				if !app.is_click_handled() {
 					app.set_click_handled()
@@ -76,7 +75,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 				word_wrap:   true
 				text_size:   text_size
 				text_color:  app.txt_color
-				wrap_shrink: v_scrollbar_width
+				wrap_shrink: models.v_scrollbar_width
 			)
 		}
 
@@ -85,7 +84,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			embed_author := author_timestamp_text(post.embed_post_author, post.embed_post_created_at)
 			post_ui << ui.row(
 				widths:   [ui.compact, ui.stretch]
-				spacing:  v_scrollbar_width
+				spacing:  models.v_scrollbar_width
 				children: [
 					ui.rectangle(
 						width: 1
@@ -100,21 +99,21 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_bold
-								wrap_shrink: v_scrollbar_width + 5
+								wrap_shrink: models.v_scrollbar_width + 5
 							),
 							widgets.link_label(
 								text:        embed_text
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color
-								wrap_shrink: v_scrollbar_width + 5
+								wrap_shrink: models.v_scrollbar_width + 5
 							),
 							widgets.link_label(
 								text:        xtra.sanitize_text(post.embed_post_link_title)
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_link
-								wrap_shrink: v_scrollbar_width + 5
+								wrap_shrink: models.v_scrollbar_width + 5
 								on_click:    embed_post_link_click_handler(post, mut app)
 							),
 						]
@@ -129,7 +128,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 				word_wrap:   true
 				text_size:   text_size_small
 				text_color:  app.txt_color_link
-				wrap_shrink: v_scrollbar_width
+				wrap_shrink: models.v_scrollbar_width
 				on_click:    fn [post, mut app] () {
 					if !app.is_click_handled() {
 						app.set_click_handled()
@@ -213,8 +212,7 @@ fn author_timestamp_text(author string, created_at time.Time) string {
 
 fn post_counts(post Post) string {
 	return '• replies ${xtra.short_size(post.replies)} ' +
-		'• reposts ${xtra.short_size(post.reposts)} ' +
-		'• likes ${xtra.short_size(post.likes)}'
+		'• reposts ${xtra.short_size(post.reposts)} ' + '• likes ${xtra.short_size(post.likes)}'
 }
 
 fn embed_post_link_click_handler(post Post, mut app App) widgets.LinkLabelClickFn {

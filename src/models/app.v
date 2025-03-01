@@ -8,7 +8,11 @@ import sync
 import time
 import ui
 
-const max_timeline_posts = 25
+pub const app_min_width = 300
+pub const v_scrollbar_width = 10
+pub const max_timeline_posts = 25
+pub const image_width = 280
+pub const max_image_height = 250
 pub const id_main_column = '_main-view-column_'
 
 pub type BuildTimelineFn = fn (timeline Timeline, mut app App)

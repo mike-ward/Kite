@@ -28,7 +28,7 @@ fn main() {
 		width:       app.settings.width
 		title:       'Kite'
 		bg_color:    app.bg_color
-		min_width:   300
+		min_width:   models.app_min_width
 		children:    [
 			ui.column(
 				id:       models.id_main_column

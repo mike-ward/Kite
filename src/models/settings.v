@@ -9,8 +9,8 @@ const settings_file = '.kite.toml'
 
 pub struct Settings {
 pub:
-	width     int = 300
-	height    int = 900
+	width     int = app_min_width
+	height    int = app_default_height
 	font_size int = 18
 	session   bsky.BlueskySession
 }

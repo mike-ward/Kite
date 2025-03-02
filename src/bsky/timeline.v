@@ -106,6 +106,19 @@ pub:
 							uri   string
 						}
 					}
+					facets     []struct {
+					pub:
+						features []struct {
+						pub:
+							type string @[json: '\$type'] // app.bsky.richtext.facet#link
+							uri  string
+						}
+						index    struct {
+						pub:
+							byte_start int @[json: 'byteStart']
+							byte_end   int @[json: 'byteEnd']
+						}
+					}
 				}
 			}
 			cid          string

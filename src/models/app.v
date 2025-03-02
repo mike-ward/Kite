@@ -9,6 +9,7 @@ import time
 import ui
 
 pub const app_min_width = 300
+pub const app_default_height = 900
 pub const v_scrollbar_width = 10
 pub const max_timeline_posts = 25
 pub const image_width = 280

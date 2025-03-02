@@ -79,9 +79,9 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 			)
 		}
 
-		embed_text := xtra.sanitize_text(post.embed_post_text)
-		if post.embed_post_author.len > 0 && embed_text.len > 0 {
-			embed_author := author_timestamp_text(post.embed_post_author, post.embed_post_created_at)
+		quote_text := xtra.sanitize_text(post.quote_post_text)
+		if post.quote_post_author.len > 0 && quote_text.len > 0 {
+			quote_author := author_timestamp_text(post.quote_post_author, post.quote_post_created_at)
 			post_ui << ui.row(
 				widths:   [ui.compact, ui.stretch]
 				spacing:  models.v_scrollbar_width
@@ -95,26 +95,26 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 						clipping: true
 						children: [
 							widgets.link_label(
-								text:        embed_author
+								text:        quote_author
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_bold
 								wrap_shrink: models.v_scrollbar_width + 5
 							),
 							widgets.link_label(
-								text:        embed_text
+								text:        quote_text
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color
 								wrap_shrink: models.v_scrollbar_width + 5
 							),
 							widgets.link_label(
-								text:        xtra.sanitize_text(post.embed_post_link_title)
+								text:        xtra.sanitize_text(post.quote_post_link_title)
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_link
 								wrap_shrink: models.v_scrollbar_width + 5
-								on_click:    embed_post_link_click_handler(post, mut app)
+								on_click:    quote_post_link_click_handler(post, mut app)
 							),
 						]
 					),
@@ -215,14 +215,14 @@ fn post_counts(post Post) string {
 		'• reposts ${xtra.short_size(post.reposts)} ' + '• likes ${xtra.short_size(post.likes)}'
 }
 
-fn embed_post_link_click_handler(post Post, mut app App) widgets.LinkLabelClickFn {
-	if post.embed_post_link_uri.len == 0 {
+fn quote_post_link_click_handler(post Post, mut app App) widgets.LinkLabelClickFn {
+	if post.quote_post_link_uri.len == 0 {
 		return widgets.LinkLabelClickFn(0)
 	}
 	return fn [post, mut app] () {
 		if !app.is_click_handled() {
 			app.set_click_handled()
-			os.open_uri(post.embed_post_link_uri) or { ui.message_box(err.msg()) }
+			os.open_uri(post.quote_post_link_uri) or { ui.message_box(err.msg()) }
 		}
 	}
 }

@@ -1,11 +1,12 @@
 module models
 
 import bsky
+import math
 import net.http
-import time
 import os
 import stbi
-import math
+import time
+import xtra
 
 const kite_dir = 'kite'
 const image_tmp_dir = os.join_path(os.temp_dir(), kite_dir)
@@ -32,11 +33,11 @@ pub:
 	reposts               int
 	likes                 int
 	bsky_link_uri         string
-	embed_post_author     string
-	embed_post_created_at time.Time
-	embed_post_text       string
-	embed_post_link_title string
-	embed_post_link_uri   string
+	quote_post_author     string
+	quote_post_created_at time.Time
+	quote_post_text       string
+	quote_post_link_title string
+	quote_post_link_uri   string
 }
 
 pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline, max_posts int) Timeline {
@@ -62,21 +63,35 @@ pub fn from_bluesky_timeline(timeline bsky.BlueskyTimeline, max_posts int) Timel
 fn from_bluesky_post(post bsky.BlueskyPost) Post {
 	handle := post.post.author.handle
 	d_name := post.post.author.display_name
+	name := if d_name.len > 0 { d_name } else { handle }
+	path, alt := post_image(post)
+	bsky_link_uri := bluesky_post_link(post)
+
+	// links are displayed below post text.
+	// If link appears in text, remove it from text.
 	mut text := post.post.record.text
 	mut uri, mut title := external_link(post)
 	inline_uri, byte_start, byte_end := inline_link(post)
-	if byte_end > 0 && byte_end < text.len && byte_start >= 0 && byte_start < byte_end {
+	if xtra.indexes_in_string(text, byte_start, byte_end) {
 		uri = inline_uri
 		title = text[byte_start..byte_end]
 		text = text[0..byte_start] + text[byte_end..]
 	}
-	path, alt := post_image(post)
-	bsky_link_uri := bluesky_post_link(post)
-	e_uri, e_title := get_embed_post_link(post)
+
+	// quoted links are displayed below quoted text.
+	// If link appears in quoted text, remove it from quoted text.
+	mut q_text := get_quote_post_text(post)
+	q_uri, mut q_title, q_byte_start, q_byte_end := get_quote_post_link(post)
+	if xtra.indexes_in_string(q_text, q_byte_start, q_byte_end) {
+		xtra.trace('inline-quote-link')
+		uri = q_uri
+		q_title = q_text[q_byte_start..q_byte_end]
+		q_text = q_text[0..q_byte_start] + q_text[q_byte_end..]
+	}
 
 	return Post{
 		id:                    post.post.uri
-		author:                if d_name.len > 0 { d_name } else { handle }
+		author:                name
 		created_at:            time.parse_iso8601(post.post.record.created_at) or { time.utc() }
 		text:                  text
 		link_uri:              uri
@@ -88,11 +103,11 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 		reposts:               post.post.reposts + post.post.quotes
 		likes:                 post.post.likes
 		bsky_link_uri:         bsky_link_uri
-		embed_post_author:     get_embed_post_author(post)
-		embed_post_created_at: get_embed_post_created_at(post)
-		embed_post_text:       get_embed_post_text(post)
-		embed_post_link_title: e_title
-		embed_post_link_uri:   e_uri
+		quote_post_author:     get_quote_post_author(post)
+		quote_post_created_at: get_quote_post_created_at(post)
+		quote_post_text:       q_text
+		quote_post_link_title: q_title
+		quote_post_link_uri:   q_uri
 	}
 }
 
@@ -193,8 +208,7 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 					eprintln(response.status())
 					continue
 				}
-				blob := response.body
-				m_img := stbi.load_from_memory(blob.str, blob.len) or {
+				m_img := stbi.load_from_memory(response.body.str, response.body.len) or {
 					eprintln(err)
 					continue
 				}
@@ -220,7 +234,7 @@ fn has_embed_post(post bsky.BlueskyPost) bool {
 		&& post.post.embed.record.value.type.contains('post')
 }
 
-fn get_embed_post_author(post bsky.BlueskyPost) string {
+fn get_quote_post_author(post bsky.BlueskyPost) string {
 	if has_embed_post(post) {
 		handle := post.post.embed.record.author.handle
 		name := post.post.embed.record.author.display_name
@@ -229,27 +243,36 @@ fn get_embed_post_author(post bsky.BlueskyPost) string {
 	return ''
 }
 
-fn get_embed_post_created_at(post bsky.BlueskyPost) time.Time {
+fn get_quote_post_created_at(post bsky.BlueskyPost) time.Time {
 	if has_embed_post(post) {
 		return time.parse_iso8601(post.post.embed.record.value.created_at) or { time.Time{} }
 	}
 	return time.Time{}
 }
 
-fn get_embed_post_text(post bsky.BlueskyPost) string {
+fn get_quote_post_text(post bsky.BlueskyPost) string {
 	if has_embed_post(post) {
 		return post.post.embed.record.value.text
 	}
 	return ''
 }
 
-fn get_embed_post_link(post bsky.BlueskyPost) (string, string) {
+fn get_quote_post_link(post bsky.BlueskyPost) (string, string, int, int) {
 	embed := post.post.embed.record.value.embed
+	facets := post.post.embed.record.value.facets
 	if has_embed_post(post) && embed.type.contains('external') {
 		title := if embed.external.title.len > 0 { embed.external.title } else { embed.external.uri }
-		return embed.external.uri, title
+		return embed.external.uri, title, 0, 0
+	} else if facets.len > 0 { // usually a link to a video
+		println('quote link')
+		if facets[0].features.len > 0 {
+			if facets[0].features[0].uri.len > 0 {
+				return facets[0].features[0].uri, facets[0].features[0].uri, facets[0].index.byte_start, facets[0].index.byte_end
+			}
+		}
 	}
-	return '', ''
+
+	return '', '', 0, 0
 }
 
 fn image_tmp_file_path(cid string) string {

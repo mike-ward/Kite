@@ -76,3 +76,7 @@ pub fn wrap_text(s string, width_dip int, mut dtw ui.DrawTextWidget) []string {
 	wrap << line
 	return wrap
 }
+
+pub fn indexes_in_string(s string, start int, end int) bool {
+	return end > 0 && end <= s.len && start >= 0 && start < end
+}

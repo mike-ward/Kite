@@ -83,7 +83,6 @@ fn from_bluesky_post(post bsky.BlueskyPost) Post {
 	mut q_text := get_quote_post_text(post)
 	q_uri, mut q_title, q_byte_start, q_byte_end := get_quote_post_link(post)
 	if xtra.indexes_in_string(q_text, q_byte_start, q_byte_end) {
-		xtra.trace('inline-quote-link')
 		uri = q_uri
 		q_title = q_text[q_byte_start..q_byte_end]
 		q_text = q_text[0..q_byte_start] + q_text[q_byte_end..]
@@ -142,14 +141,15 @@ fn external_link(post bsky.BlueskyPost) (string, string) {
 
 // get_post_image downloads the first image blob assciated with the post
 // and returns the file path where the image is stored and the alt text
-// for that image. Images are resized to reduce memory load.
+// for that image.
 fn post_image(post bsky.BlueskyPost) (string, string) {
 	if post.post.record.embed.images.len > 0 {
-		image := post.post.record.embed.images[0]
-		cid := image.image.ref.link
-		tmp_file := image_tmp_file_path(cid)
-		if os.exists(tmp_file) {
-			return tmp_file, image.alt
+		for image in post.post.record.embed.images {
+			cid := image.image.ref.link
+			tmp_file := image_tmp_file_path(cid)
+			if os.exists(tmp_file) {
+				return tmp_file, image.alt
+			}
 		}
 	} else if post.post.embed.thumbnail.len > 0 {
 		cid := post.post.embed.cid
@@ -264,10 +264,11 @@ fn get_quote_post_link(post bsky.BlueskyPost) (string, string, int, int) {
 		title := if embed.external.title.len > 0 { embed.external.title } else { embed.external.uri }
 		return embed.external.uri, title, 0, 0
 	} else if facets.len > 0 { // usually a link to a video
-		println('quote link')
-		if facets[0].features.len > 0 {
-			if facets[0].features[0].uri.len > 0 {
-				return facets[0].features[0].uri, facets[0].features[0].uri, facets[0].index.byte_start, facets[0].index.byte_end
+		for facet in facets {
+			for feature in facet.features {
+				if feature.uri.len > 0 {
+					return feature.uri, feature.uri, facets[0].index.byte_start, facets[0].index.byte_end
+				}
 			}
 		}
 	}
@@ -280,10 +281,8 @@ fn image_tmp_file_path(cid string) string {
 }
 
 fn inline_link(post bsky.BlueskyPost) (string, int, int) {
-	if post.post.record.facets.len > 0 {
-		if post.post.record.facets[0].features.len > 0 {
-			facet := post.post.record.facets[0]
-			feature := facet.features[0]
+	for facet in post.post.record.facets {
+		for feature in facet.features {
 			if feature.type.contains('#link') {
 				return feature.uri, facet.index.byte_start, facet.index.byte_end
 			}

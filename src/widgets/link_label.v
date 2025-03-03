@@ -23,6 +23,7 @@ mut:
 	word_wrap    bool
 	wrap_shrink  int
 	is_over      bool
+	hover_color  gx.Color
 	// DrawTextWidget interface
 	text_styles ui.TextStyles
 	// Widget interface
@@ -55,6 +56,7 @@ pub:
 	on_click     LinkLabelClickFn = LinkLabelClickFn(0)
 	word_wrap    bool
 	wrap_shrink  int
+	hover_color  gx.Color
 }
 
 pub fn link_label(c LinkLabelParams) &LinkLabel {
@@ -69,6 +71,9 @@ pub fn link_label(c LinkLabelParams) &LinkLabel {
 		on_click:     c.on_click
 		word_wrap:    c.word_wrap
 		wrap_shrink:  c.wrap_shrink
+	}
+	if ll.hover_color == gx.black {
+		ll.hover_color = dim_color(ll.style_params.text_color)
 	}
 	ll.style_params.style = c.theme
 	return ll
@@ -148,16 +153,15 @@ fn (mut ll LinkLabel) draw() {
 }
 
 fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
-	if ll.y == 0 {
+	if ll.y == 0 || ll.hidden {
 		return
 	}
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(dd)
 	if ll.on_click != LinkLabelClickFn(0) && ll.app_has_focus() {
-		text_color := ll.style_params.text_color
 		dtw.text_styles.current.color = match ll.is_over {
-			true { dim_color(text_color) }
-			else { text_color }
+			true { ll.hover_color }
+			else { ll.style_params.text_color }
 		}
 	}
 	x := ll.x + ll.offset_x
@@ -166,15 +170,20 @@ fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
 		dtw.draw_device_text(dd, x, y, line)
 		y += ll.line_height
 	}
+	// xx := ll.x + ll.offset_x
+	// yy := ll.y + ll.offset_y
+	// dd.draw_rect_filled(xx, yy, 23, ll.line_height, gx.rgb(0x10, 0x10, 0x10))
+	// dtw.draw_device_text(dd, xx, yy, '${ll.height}')
 }
 
 // --- non-interface stuff
 
 fn (mut ll LinkLabel) set_size(w int, h int) {
+	mut dtw := ui.DrawTextWidget(ll)
+	dtw.load_style()
 	if ll.word_wrap {
-		mut dtw := ui.DrawTextWidget(ll)
-		dtw.load_style()
-		ll.lines = xtra.wrap_text(ll.text, w - ll.wrap_shrink, mut dtw)
+		width := w - ll.wrap_shrink - ll.offset_x
+		ll.lines = xtra.wrap_text(ll.text, width, mut dtw)
 	} else {
 		ll.lines = [ll.text.fields().join(' ')]
 	}

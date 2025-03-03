@@ -82,6 +82,7 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		quote_text := xtra.sanitize_text(post.quote_post_text)
 		if post.quote_post_author.len > 0 && quote_text.len > 0 {
 			quote_author := author_timestamp_text(post.quote_post_author, post.quote_post_created_at)
+			shrink := models.v_scrollbar_width + 2
 			post_ui << ui.row(
 				widths:   [ui.compact, ui.stretch]
 				spacing:  models.v_scrollbar_width
@@ -92,28 +93,27 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 					),
 					ui.column(
 						spacing:  post_spacing
-						clipping: true
 						children: [
 							widgets.link_label(
 								text:        quote_author
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_bold
-								wrap_shrink: models.v_scrollbar_width + 5
+								wrap_shrink: shrink
 							),
 							widgets.link_label(
 								text:        quote_text
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color
-								wrap_shrink: models.v_scrollbar_width + 5
+								wrap_shrink: shrink
 							),
 							widgets.link_label(
 								text:        xtra.sanitize_text(post.quote_post_link_title)
 								word_wrap:   true
 								text_size:   text_size_small
 								text_color:  app.txt_color_link
-								wrap_shrink: models.v_scrollbar_width + 5
+								wrap_shrink: shrink
 								on_click:    quote_post_link_click_handler(post, mut app)
 							),
 						]

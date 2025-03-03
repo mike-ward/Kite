@@ -2,6 +2,7 @@
 
 all:
 	v run . &
-
+debug:
+	v -g run . &
 prod:
-	v -gc boehm_full_opt -prod .
+	v -prod .

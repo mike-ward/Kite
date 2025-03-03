@@ -120,6 +120,17 @@ pub:
 						}
 					}
 				}
+				embeds []struct {
+				pub:
+					type         string @[json: '\$type'] // video#view
+					cid          string
+					thumbnail    string
+					aspect_ratio struct {
+					pub:
+						width  int
+						height int
+					} @[json: 'aspectRatio']
+				}
 			}
 			cid          string
 			thumbnail    string

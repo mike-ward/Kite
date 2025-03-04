@@ -19,7 +19,7 @@ mut:
 	style_params ui.LabelStyleParams
 	line_height  int
 	line_spacing int              = line_spacing_default
-	on_click     LinkLabelClickFn = LinkLabelClickFn(0)
+	on_click     LinkLabelClickFn = unsafe { nil }
 	word_wrap    bool
 	wrap_shrink  int
 	is_over      bool
@@ -53,7 +53,7 @@ pub:
 	line_spacing int    = line_spacing_default
 	offset_x     int
 	offset_y     int
-	on_click     LinkLabelClickFn = LinkLabelClickFn(0)
+	on_click     LinkLabelClickFn = unsafe { nil }
 	word_wrap    bool
 	wrap_shrink  int
 	hover_color  gx.Color
@@ -85,7 +85,7 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 	ll.load_style()
 	w, h := parent.size()
 	ll.set_size(w, h)
-	if ll.on_click != LinkLabelClickFn(0) {
+	if ll.on_click != unsafe { nil } {
 		mut subscriber := parent.get_subscriber()
 		subscriber.subscribe_method(ui.events.on_click, ll_click, ll)
 		subscriber.subscribe_method(ui.events.on_mouse_move, ll_mouse_move, ll)
@@ -93,7 +93,7 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 }
 
 fn (mut ll LinkLabel) cleanup() {
-	if ll.on_click != LinkLabelClickFn(0) {
+	if ll.on_click != unsafe { nil } {
 		mut subscriber := ll.parent.get_subscriber()
 		subscriber.unsubscribe_method(ui.events.on_click, ll)
 		subscriber.unsubscribe_method(ui.events.on_mouse_move, ll)
@@ -158,7 +158,7 @@ fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
 	}
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(dd)
-	if ll.on_click != LinkLabelClickFn(0) && ll.app_has_focus() {
+	if ll.on_click != unsafe { nil } && ll.app_has_focus() {
 		dtw.text_styles.current.color = match ll.is_over {
 			true { ll.hover_color }
 			else { ll.style_params.text_color }
@@ -170,10 +170,6 @@ fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
 		dtw.draw_device_text(dd, x, y, line)
 		y += ll.line_height
 	}
-	// xx := ll.x + ll.offset_x
-	// yy := ll.y + ll.offset_y
-	// dd.draw_rect_filled(xx, yy, 23, ll.line_height, gx.rgb(0x10, 0x10, 0x10))
-	// dtw.draw_device_text(dd, xx, yy, '${ll.height}')
 }
 
 // --- non-interface stuff

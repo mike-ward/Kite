@@ -56,6 +56,7 @@ fn main() {
 			if mut sv_stack := win.get[ui.Stack](views.id_timeline_scrollview) {
 				sv_stack.scrollview.set(sv_stack.scrollview.offset_y, .btn_y)
 			}
+			win.update_layout()
 		}
 		on_draw:     fn [mut app] (mut w ui.Window) {
 			// Updates need to occur on UI thread

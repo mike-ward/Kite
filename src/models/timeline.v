@@ -151,6 +151,14 @@ fn post_image(post bsky.BlueskyPost) (string, string) {
 				return tmp_file, image.alt
 			}
 		}
+	} else if post.post.record.embed.media.images.len > 0 {
+		for image in post.post.record.embed.media.images {
+			cid := image.image.ref.link
+			tmp_file := image_tmp_file_path(cid)
+			if os.exists(tmp_file) {
+				return tmp_file, image.alt
+			}
+		}
 	} else if post.post.embed.thumbnail.len > 0 {
 		cid := post.post.embed.cid
 		tmp_file := image_tmp_file_path(cid)
@@ -161,45 +169,55 @@ fn post_image(post bsky.BlueskyPost) (string, string) {
 	return '', ''
 }
 
+// get_timeline_images retrieves images from bluesky.
+// Instead of direct links, an identitier (cid) is specified.
+// The api also requires the authors identifier (did)
 pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 	os.mkdir_all(image_tmp_dir) or { eprintln(err) }
 
+	// There are several places wehre images are buried.
+	// Similar and yet different enough to make for messy code.
 	for post in timeline.posts {
 		if post.post.record.embed.images.len > 0 {
-			image := post.post.record.embed.images[0]
-			if image.image.ref.link.len > 0 {
-				cid := image.image.ref.link
-				image_tmp_file := image_tmp_file_path(cid)
-				if !os.exists(image_tmp_file) {
-					blob := bsky.get_blob(post.post.author.did, cid) or {
-						eprintln(err)
-						continue
+			for image in post.post.record.embed.images {
+				if image.image.ref.link.len > 0 {
+					cid := image.image.ref.link
+					image_tmp_file := image_tmp_file_path(cid)
+					if !os.exists(image_tmp_file) {
+						blob := bsky.get_blob(post.post.author.did, cid) or {
+							eprintln(err)
+							continue
+						}
+						process_image(image_tmp_file, blob, image.aspect_ratio.width,
+							image.aspect_ratio.height) or {
+							eprintln(err)
+							continue
+						}
 					}
-					m_img := stbi.load_from_memory(blob.str, blob.len) or {
-						eprintln(err)
-						continue
+				}
+			}
+		} else if post.post.record.embed.media.images.len > 0 {
+			for image in post.post.record.embed.media.images {
+				if image.image.ref.link.len > 0 {
+					cid := image.image.ref.link
+					image_tmp_file := image_tmp_file_path(cid)
+					if !os.exists(image_tmp_file) {
+						blob := bsky.get_blob(post.post.author.did, cid) or {
+							eprintln(err)
+							continue
+						}
+						process_image(image_tmp_file, blob, image.aspect_ratio.width,
+							image.aspect_ratio.height) or {
+							eprintln(err)
+							continue
+						}
 					}
-					ratio := match image.aspect_ratio.width != 0 && image.aspect_ratio.height != 0 {
-						true { f64(image.aspect_ratio.height) / f64(image.aspect_ratio.width) }
-						else { 1.0 }
-					}
-					r_img := stbi.resize_uint8(m_img, image_width, int(image_width * ratio)) or {
-						eprintln(err)
-						continue
-					}
-					height := math.min(max_image_height, r_img.height)
-					stbi.stbi_write_jpg(image_tmp_file, r_img.width, height, r_img.nr_channels,
-						r_img.data, 90) or { eprintln(err) }
 				}
 			}
 		} else if post.post.embed.thumbnail.len > 0 {
-			// println(post.post.embed.cid)
-			// println(post.post.embed.thumbnail)
-			// println(post.post.embed.aspect_ratio)
 			cid := post.post.embed.cid
 			image_tmp_file := image_tmp_file_path(cid)
 			if !os.exists(image_tmp_file) {
-				// println(image_tmp_file)
 				response := http.get(post.post.embed.thumbnail) or {
 					eprintln(err.msg())
 					continue
@@ -208,25 +226,30 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 					eprintln(response.status())
 					continue
 				}
-				m_img := stbi.load_from_memory(response.body.str, response.body.len) or {
+				process_image(image_tmp_file, response.body, post.post.embed.aspect_ratio.width,
+					post.post.embed.aspect_ratio.height) or {
 					eprintln(err)
 					continue
 				}
-				aspect_ratio := post.post.embed.aspect_ratio
-				ratio := match aspect_ratio.width != 0 && aspect_ratio.height != 0 {
-					true { f64(aspect_ratio.height) / f64(aspect_ratio.width) }
-					else { 1.0 }
-				}
-				r_img := stbi.resize_uint8(m_img, image_width, int(image_width * ratio)) or {
-					eprintln(err)
-					continue
-				}
-				height := math.min(max_image_height, r_img.height)
-				stbi.stbi_write_jpg(image_tmp_file, r_img.width, height, r_img.nr_channels,
-					r_img.data, 90) or { eprintln(err) }
 			}
 		}
 	}
+}
+
+fn process_image(file_name string, blob string, aspect_ratio_width int, aspect_ratio_height int) ! {
+	m_img := stbi.load_from_memory(blob.str, blob.len) or { return err }
+
+	ratio := match aspect_ratio_width != 0 && aspect_ratio_height != 0 {
+		true { f64(aspect_ratio_height) / f64(aspect_ratio_width) }
+		else { 1.0 }
+	}
+
+	r_img := stbi.resize_uint8(m_img, image_width, int(image_width * ratio)) or { return err }
+
+	r_height := math.min(max_image_height, r_img.height)
+
+	stbi.stbi_write_jpg(file_name, r_img.width, r_height, r_img.nr_channels, r_img.data,
+		90) or { return err }
 }
 
 fn has_embed_post(post bsky.BlueskyPost) bool {

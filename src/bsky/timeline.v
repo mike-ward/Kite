@@ -55,6 +55,27 @@ pub:
 					title string
 					uri   string
 				}
+				media    struct {
+				pub:
+					type   string @[json: '\$type'] // app.bsky.embed.images
+					images []struct {
+					pub:
+						alt          string
+						image        struct {
+						pub:
+							type string @[json: '\$type'] // blob
+							ref  struct {
+							pub:
+								link string @[json: '\$link']
+							}
+						}
+						aspect_ratio struct {
+						pub:
+							width  int
+							height int
+						} @[json: 'aspectRatio']
+					}
+				}
 			}
 			facets     []struct {
 			pub:

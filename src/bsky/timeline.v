@@ -17,167 +17,27 @@ pub:
 	post   struct {
 	pub:
 		uri     string
-		author  struct {
-		pub:
-			did          string
-			handle       string
-			display_name string @[json: 'displayName']
-		}
+		author  Author
 		record  struct {
 		pub:
 			type       string @[json: '\$type'] // app.bsky.feed.post
 			text       string
 			created_at string @[json: 'createdAt']
-			embed      struct {
-			pub:
-				type     string @[json: '\$type'] // app.bsky.embed.images
-				images   []struct {
-				pub:
-					alt          string
-					aspect_ratio struct {
-					pub:
-						width  int
-						height int
-					} @[json: 'aspectRatio']
-					image        struct {
-					pub:
-						type      string @[json: '\$type']
-						mime_type string @[json: 'mimeType']
-						size      int
-						ref       struct {
-						pub:
-							link string @[json: '\$link']
-						}
-					}
-				}
-				external struct {
-				pub:
-					title string
-					uri   string
-				}
-				media    struct {
-				pub:
-					type   string @[json: '\$type'] // app.bsky.embed.images
-					images []struct {
-					pub:
-						alt          string
-						image        struct {
-						pub:
-							type string @[json: '\$type'] // blob
-							ref  struct {
-							pub:
-								link string @[json: '\$link']
-							}
-						}
-						aspect_ratio struct {
-						pub:
-							width  int
-							height int
-						} @[json: 'aspectRatio']
-					}
-				}
-			}
-			facets     []struct {
-			pub:
-				features []struct {
-				pub:
-					type string @[json: '\$type'] // app.bsky.richtext.facet#link
-					uri  string
-				}
-				index    struct {
-				pub:
-					byte_start int @[json: 'byteStart']
-					byte_end   int @[json: 'byteEnd']
-				}
-			}
-			reply      struct {
-			pub:
-				parent struct {
-				pub:
-					cid string
-				}
-				root   struct {
-				pub:
-					cid string
-				}
-			}
+			embed      EmbedImages
+			reply      Reply
+			facets     []Facet
 		}
 		embed   struct {
 		pub:
-			type         string @[json: '\$type']
-			record       struct {
+			type      string @[json: '\$type']
+			record    struct {
 			pub:
 				type   string @[json: '\$type']
-				author struct {
-				pub:
-					did          string
-					handle       string
-					display_name string @[json: 'displayName']
-				}
-				value  struct {
-				pub:
-					type       string @[json: '\$type']
-					created_at string @[json: 'createdAt']
-					text       string
-					embed      struct {
-					pub:
-						type     string @[json: '\$type']
-						external struct {
-						pub:
-							title string
-							uri   string
-						}
-						images   []struct {
-						pub:
-							alt          string
-							image        struct {
-							pub:
-								type string @[json: '\$type'] // blob
-								ref  struct {
-								pub:
-									link string @[json: '\$link']
-								}
-							}
-							aspect_ratio struct {
-							pub:
-								width  int
-								height int
-							} @[json: 'aspectRatio']
-						}
-					}
-					facets     []struct {
-					pub:
-						features []struct {
-						pub:
-							type string @[json: '\$type'] // app.bsky.richtext.facet#link
-							uri  string
-						}
-						index    struct {
-						pub:
-							byte_start int @[json: 'byteStart']
-							byte_end   int @[json: 'byteEnd']
-						}
-					}
-				}
-				embeds []struct {
-				pub:
-					type         string @[json: '\$type'] // video#view
-					cid          string
-					thumbnail    string
-					aspect_ratio struct {
-					pub:
-						width  int
-						height int
-					} @[json: 'aspectRatio']
-				}
+				author Author
+				value  Value
 			}
-			cid          string
-			thumbnail    string
-			aspect_ratio struct {
-			pub:
-				width  int
-				height int
-			} @[json: 'aspectRatio']
+			cid       string
+			thumbnail string
 		}
 		replies int @[json: 'replyCount']
 		likes   int @[json: 'likeCount']
@@ -187,12 +47,83 @@ pub:
 	reason struct {
 	pub:
 		type string @[json: '\$type']
-		by   struct {
+		by   Author
+	}
+}
+
+pub struct Author {
+pub:
+	did          string
+	handle       string
+	display_name string @[json: 'displayName']
+}
+
+pub struct Image {
+pub:
+	alt   string
+	image struct {
+	pub:
+		type string @[json: '\$type'] // blob
+		ref  struct {
 		pub:
-			handle       string
-			display_name string @[json: 'displayName']
+			link string @[json: '\$link']
 		}
 	}
+}
+
+pub struct Facet {
+pub:
+	features []struct {
+	pub:
+		type string @[json: '\$type'] // app.bsky.richtext.facet#link
+		uri  string
+	}
+	index    struct {
+	pub:
+		byte_start int @[json: 'byteStart']
+		byte_end   int @[json: 'byteEnd']
+	}
+}
+
+pub struct Media {
+pub:
+	type   string @[json: '\$type'] // app.bsky.embed.images
+	images []Image
+}
+
+pub struct External {
+pub:
+	title string
+	uri   string
+}
+
+pub struct EmbedImages {
+pub:
+	type     string @[json: '\$type'] // app.bsky.embed.images
+	images   []Image
+	media    Media
+	external External
+}
+
+pub struct Reply {
+pub:
+	parent struct {
+	pub:
+		cid string
+	}
+	root   struct {
+	pub:
+		cid string
+	}
+}
+
+pub struct Value {
+pub:
+	type       string @[json: '\$type']
+	created_at string @[json: 'createdAt']
+	text       string
+	embed      EmbedImages
+	facets     []Facet
 }
 
 pub fn get_timeline(session BlueskySession) !BlueskyTimeline {
@@ -223,7 +154,7 @@ pub fn error_timeline(s string) BlueskyTimeline {
 		posts: [
 			struct {
 				post: struct {
-					author: struct {
+					author: Author{
 						handle:       error_title
 						display_name: error_title
 					}

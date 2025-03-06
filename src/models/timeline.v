@@ -196,8 +196,7 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 							eprintln(err)
 							continue
 						}
-						process_image(image_tmp_file, blob, image.aspect_ratio.width,
-							image.aspect_ratio.height) or {
+						save_image(image_tmp_file, blob) or {
 							eprintln(err)
 							continue
 						}
@@ -214,8 +213,7 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 							eprintln(err)
 							continue
 						}
-						process_image(image_tmp_file, blob, image.aspect_ratio.width,
-							image.aspect_ratio.height) or {
+						save_image(image_tmp_file, blob) or {
 							eprintln(err)
 							continue
 						}
@@ -234,8 +232,7 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 					eprintln(response.status())
 					continue
 				}
-				process_image(image_tmp_file, response.body, post.post.embed.aspect_ratio.width,
-					post.post.embed.aspect_ratio.height) or {
+				save_image(image_tmp_file, response.body) or {
 					eprintln(err)
 					continue
 				}
@@ -250,8 +247,7 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 							eprintln(err)
 							continue
 						}
-						process_image(image_tmp_file, blob, image.aspect_ratio.width,
-							image.aspect_ratio.height) or {
+						save_image(image_tmp_file, blob) or {
 							eprintln(err)
 							continue
 						}
@@ -262,20 +258,15 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 	}
 }
 
-fn process_image(file_name string, blob string, aspect_ratio_width int, aspect_ratio_height int) ! {
+fn save_image(name string, blob string) ! {
 	m_img := stbi.load_from_memory(blob.str, blob.len) or { return err }
-
-	ratio := match aspect_ratio_width != 0 && aspect_ratio_height != 0 {
-		true { f64(aspect_ratio_height) / f64(aspect_ratio_width) }
-		else { 1.0 }
-	}
-
+	ratio := f64(m_img.height) / f64(m_img.width)
 	r_img := stbi.resize_uint8(m_img, image_width, int(image_width * ratio)) or { return err }
+	height := math.min(max_image_height, r_img.height)
 
-	r_height := math.min(max_image_height, r_img.height)
-
-	stbi.stbi_write_jpg(file_name, r_img.width, r_height, r_img.nr_channels, r_img.data,
-		90) or { return err }
+	stbi.stbi_write_jpg(name, r_img.width, height, r_img.nr_channels, r_img.data, 90) or {
+		return err
+	}
 }
 
 fn has_embed_post(post bsky.BlueskyPost) bool {

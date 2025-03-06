@@ -165,6 +165,14 @@ fn post_image(post bsky.BlueskyPost) (string, string) {
 		if os.exists(tmp_file) {
 			return tmp_file, ''
 		}
+	} else if post.post.embed.record.value.embed.images.len > 0 {
+		for image in post.post.embed.record.value.embed.images {
+			cid := image.image.ref.link
+			tmp_file := image_tmp_file_path(cid)
+			if os.exists(tmp_file) {
+				return tmp_file, image.alt
+			}
+		}
 	}
 	return '', ''
 }
@@ -230,6 +238,24 @@ pub fn get_timeline_images(timeline bsky.BlueskyTimeline) {
 					post.post.embed.aspect_ratio.height) or {
 					eprintln(err)
 					continue
+				}
+			}
+		} else if post.post.embed.record.value.embed.images.len > 0 {
+			for image in post.post.embed.record.value.embed.images {
+				if image.image.ref.link.len > 0 {
+					cid := image.image.ref.link
+					image_tmp_file := image_tmp_file_path(cid)
+					if !os.exists(image_tmp_file) {
+						blob := bsky.get_blob(post.post.embed.record.author.did, cid) or {
+							eprintln(err)
+							continue
+						}
+						process_image(image_tmp_file, blob, image.aspect_ratio.width,
+							image.aspect_ratio.height) or {
+							eprintln(err)
+							continue
+						}
+					}
 				}
 			}
 		}

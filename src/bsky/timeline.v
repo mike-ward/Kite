@@ -110,6 +110,7 @@ pub:
 				type   string @[json: '\$type']
 				author struct {
 				pub:
+					did          string
 					handle       string
 					display_name string @[json: 'displayName']
 				}
@@ -125,6 +126,23 @@ pub:
 						pub:
 							title string
 							uri   string
+						}
+						images   []struct {
+						pub:
+							alt          string
+							image        struct {
+							pub:
+								type string @[json: '\$type'] // blob
+								ref  struct {
+								pub:
+									link string @[json: '\$link']
+								}
+							}
+							aspect_ratio struct {
+							pub:
+								width  int
+								height int
+							} @[json: 'aspectRatio']
 						}
 					}
 					facets     []struct {

@@ -23,21 +23,21 @@ pub:
 			type       string @[json: '\$type'] // app.bsky.feed.post
 			text       string
 			created_at string @[json: 'createdAt']
-			embed      EmbedImages
+			embed      EmbedMedia
 			reply      Reply
 			facets     []Facet
 		}
 		embed   struct {
 		pub:
 			type      string @[json: '\$type']
+			cid       string
+			thumbnail string
 			record    struct {
 			pub:
 				type   string @[json: '\$type']
 				author Author
 				value  Value
 			}
-			cid       string
-			thumbnail string
 		}
 		replies int @[json: 'replyCount']
 		likes   int @[json: 'likeCount']
@@ -58,7 +58,15 @@ pub:
 	display_name string @[json: 'displayName']
 }
 
-pub struct Image {
+pub struct EmbedMedia {
+pub:
+	type     string @[json: '\$type'] // app.bsky.embed.images
+	images   []ImageLink
+	media    Media
+	external ExternalLink
+}
+
+pub struct ImageLink {
 pub:
 	alt   string
 	image struct {
@@ -69,6 +77,27 @@ pub:
 			link string @[json: '\$link']
 		}
 	}
+}
+
+pub struct Media {
+pub:
+	type   string @[json: '\$type'] // app.bsky.embed.images
+	images []ImageLink
+}
+
+pub struct ExternalLink {
+pub:
+	title string
+	uri   string
+}
+
+pub struct Value {
+pub:
+	type       string @[json: '\$type']
+	created_at string @[json: 'createdAt']
+	text       string
+	embed      EmbedMedia
+	facets     []Facet
 }
 
 pub struct Facet {
@@ -85,26 +114,6 @@ pub:
 	}
 }
 
-pub struct Media {
-pub:
-	type   string @[json: '\$type'] // app.bsky.embed.images
-	images []Image
-}
-
-pub struct External {
-pub:
-	title string
-	uri   string
-}
-
-pub struct EmbedImages {
-pub:
-	type     string @[json: '\$type'] // app.bsky.embed.images
-	images   []Image
-	media    Media
-	external External
-}
-
 pub struct Reply {
 pub:
 	parent struct {
@@ -115,15 +124,6 @@ pub:
 	pub:
 		cid string
 	}
-}
-
-pub struct Value {
-pub:
-	type       string @[json: '\$type']
-	created_at string @[json: 'createdAt']
-	text       string
-	embed      EmbedImages
-	facets     []Facet
 }
 
 pub fn get_timeline(session BlueskySession) !BlueskyTimeline {

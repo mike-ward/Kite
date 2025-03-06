@@ -1,7 +1,6 @@
 module xtra
 
 import arrays
-import regex
 import math
 import ui
 
@@ -15,24 +14,21 @@ pub fn truncate_long_fields(s string) string {
 }
 
 pub fn remove_non_ascii(s string) string {
-	// convert smart quotes to regular quotes
 	s1 := arrays.join_to_string[string](s.fields(), ' ', fn (elem string) string {
-		// These characters don't work with VUi for now
+		// These characters don't work with v-ui for now
 		return elem
 			.replace('“', '"')
 			.replace('”', '"')
 			.replace('’', "'")
 			.replace('‘', "'")
 			.replace('—', '--')
+			.replace('–', '-')
 			.replace('…', '...')
 			.replace('&mdash;', '--')
-			.replace(' ', ' ') // &nbsp;
+			.replace('\xc2\xa0', ' ') // &nbsp;
 	})
-	// strip out non-ascii characters
-	if mut query := regex.regex_opt(r"[^' ',!-ÿ]") {
-		return query.replace(s1, '')
-	}
-	return s1
+	printable := s1.runes().map(if it < rune(0x20) || it > rune(0xFF) { rune(0x20) } else { it })
+	return printable.string()
 }
 
 pub fn sanitize_text(s string) string {

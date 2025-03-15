@@ -217,9 +217,9 @@ fn post_counts(post Post) string {
 		'• reposts ${xtra.short_size(post.reposts)} ' + '• likes ${xtra.short_size(post.likes)}'
 }
 
-fn quote_post_link_click_handler(post Post, mut app App) widgets.LinkLabelClickFn {
+fn quote_post_link_click_handler(post Post, mut app App) ?widgets.LinkLabelClickFn {
 	if post.quote_post_link_uri.len == 0 {
-		return widgets.LinkLabelClickFn(0)
+		return none
 	}
 	return fn [post, mut app] () {
 		if !app.is_click_handled() {

@@ -80,7 +80,7 @@ pub fn (mut app App) refresh_session() {
 
 pub fn (mut app App) start_timeline(build_timeline_fn BuildTimelineFn) {
 	prune_disk_image_cache()
-	go app.timeline_loop(build_timeline_fn)
+	spawn app.timeline_loop(build_timeline_fn)
 }
 
 fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
@@ -100,9 +100,9 @@ fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
 
 		get_timeline_images(bluesky_timeline)
 		timeline := from_bluesky_timeline(bluesky_timeline, max_timeline_posts)
-
 		build_timeline_fn(timeline, mut app)
 		app.prune_picture_cache(timeline.posts)
+
 		time.sleep(time.minute)
 	}
 }

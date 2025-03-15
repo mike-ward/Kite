@@ -18,8 +18,8 @@ mut:
 	style        ui.LabelStyle
 	style_params ui.LabelStyleParams
 	line_height  int
-	line_spacing int              = line_spacing_default
-	on_click     LinkLabelClickFn = unsafe { nil }
+	line_spacing int = line_spacing_default
+	on_click     ?LinkLabelClickFn
 	word_wrap    bool
 	wrap_shrink  int
 	is_over      bool
@@ -53,7 +53,7 @@ pub:
 	line_spacing int    = line_spacing_default
 	offset_x     int
 	offset_y     int
-	on_click     LinkLabelClickFn = unsafe { nil }
+	on_click     ?LinkLabelClickFn
 	word_wrap    bool
 	wrap_shrink  int
 	hover_color  gx.Color
@@ -85,7 +85,7 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 	ll.load_style()
 	w, h := parent.size()
 	ll.set_size(w, h)
-	if ll.on_click != unsafe { nil } {
+	if ll.on_click != none {
 		mut subscriber := parent.get_subscriber()
 		subscriber.subscribe_method(ui.events.on_click, ll_click, ll)
 		subscriber.subscribe_method(ui.events.on_mouse_move, ll_mouse_move, ll)
@@ -93,7 +93,7 @@ fn (mut ll LinkLabel) init(parent ui.Layout) {
 }
 
 fn (mut ll LinkLabel) cleanup() {
-	if ll.on_click != unsafe { nil } {
+	if ll.on_click != none {
 		mut subscriber := ll.parent.get_subscriber()
 		subscriber.unsubscribe_method(ui.events.on_click, ll)
 		subscriber.unsubscribe_method(ui.events.on_mouse_move, ll)
@@ -117,7 +117,9 @@ fn ll_mouse_move(mut ll LinkLabel, e &ui.MouseMoveEvent, window &ui.Window) {
 
 fn ll_click(mut ll LinkLabel, e &ui.MouseEvent, w &ui.Window) {
 	if ll.point_inside(e.x, e.y) {
-		ll.on_click()
+		if click := ll.on_click {
+			click()
+		}
 	}
 }
 
@@ -158,10 +160,12 @@ fn (mut ll LinkLabel) draw_device(mut dd ui.DrawDevice) {
 	}
 	mut dtw := ui.DrawTextWidget(ll)
 	dtw.draw_device_load_style(dd)
-	if ll.on_click != unsafe { nil } && ll.app_has_focus() {
-		dtw.text_styles.current.color = match ll.is_over {
-			true { ll.hover_color }
-			else { ll.style_params.text_color }
+	if _ := ll.on_click {
+		if ll.app_has_focus() {
+			dtw.text_styles.current.color = match ll.is_over {
+				true { ll.hover_color }
+				else { ll.style_params.text_color }
+			}
 		}
 	}
 	x := ll.x + ll.offset_x

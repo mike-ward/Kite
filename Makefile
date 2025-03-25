@@ -1,8 +1,8 @@
-.PHONY: all
+.PHONY: all debug prod
 
 all:
-	v run . &
+	cd src && v -o ../kite run . &
 debug:
-	v -g run . &
+	cd src &&v -g -o ../kite run . &
 prod:
-	v -prod .
+	cd src && v -prod -o ../kite .

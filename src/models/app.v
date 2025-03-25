@@ -94,7 +94,7 @@ fn (mut app App) timeline_loop(build_timeline_fn BuildTimelineFn) {
 		}
 
 		bluesky_timeline := bsky.get_timeline(app.settings.session) or {
-			Settings{}.save_settings()
+			// Settings{}.save_settings()
 			bsky.error_timeline(err.msg())
 		}
 

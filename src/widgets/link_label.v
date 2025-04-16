@@ -5,7 +5,7 @@ import gx
 import sokol.sapp
 import ui
 
-const line_spacing_default = 2
+const line_spacing_default = 1
 
 pub type LinkLabelClickFn = fn ()
 

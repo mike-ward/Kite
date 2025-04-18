@@ -41,12 +41,13 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.repost_by.len > 0 {
 			post_ui << widgets.link_label(
-				text:        xtra.sanitize_text('reposted by ${post.repost_by}')
-				word_wrap:   true
-				text_size:   text_size_small
-				text_color:  app.txt_color_dim
-				wrap_shrink: models.v_scrollbar_width
-				offset_y:    -2
+				text:         xtra.sanitize_text('reposted by ${post.repost_by}')
+				word_wrap:    true
+				text_size:    text_size_small
+				line_spacing: -1
+				text_color:   app.txt_color_dim
+				wrap_shrink:  models.v_scrollbar_width
+				offset_y:     -2
 			)
 		}
 
@@ -94,29 +95,33 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 						spacing:  post_spacing
 						children: [
 							widgets.link_label(
-								text:        quote_author
-								word_wrap:   true
-								text_size:   text_size_small
-								text_color:  app.txt_color_bold
-								wrap_shrink: shrink
-								offset_x:    models.v_scrollbar_width
+								text:         quote_author
+								word_wrap:    true
+								text_size:    text_size_small
+								line_spacing: -1
+								text_color:   app.txt_color_bold
+								wrap_shrink:  shrink
+								offset_x:     models.v_scrollbar_width
 							),
 							widgets.link_label(
-								text:        quote_text
-								word_wrap:   true
-								text_size:   text_size_small
-								text_color:  app.txt_color
-								wrap_shrink: shrink
-								offset_x:    models.v_scrollbar_width
+								text:         quote_text
+								word_wrap:    true
+								text_size:    text_size_small
+								line_spacing: -1
+								text_color:   app.txt_color
+								wrap_shrink:  shrink
+								offset_x:     models.v_scrollbar_width
 							),
 							widgets.link_label(
-								text:        xtra.sanitize_text(post.quote_post_link_title)
-								word_wrap:   true
-								text_size:   text_size_small
-								text_color:  app.txt_color_link
-								wrap_shrink: shrink
-								offset_x:    models.v_scrollbar_width
-								on_click:    quote_post_link_click_handler(post, mut app)
+								text:         xtra.sanitize_text(post.quote_post_link_title)
+								word_wrap:    true
+								text_size:    text_size_small
+								line_spacing: -1
+								text_color:   app.txt_color_link
+								wrap_shrink:  shrink
+								offset_x:     models.v_scrollbar_width
+								on_click:     quote_post_link_click_handler(post, mut
+									app)
 							),
 						]
 					),
@@ -126,12 +131,13 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 
 		if post.link_uri.len > 0 && post.link_title.len > 0 {
 			post_ui << widgets.link_label(
-				text:        xtra.sanitize_text(post.link_title)
-				word_wrap:   true
-				text_size:   text_size_small
-				text_color:  app.txt_color_link
-				wrap_shrink: models.v_scrollbar_width
-				on_click:    fn [post, mut app] () {
+				text:         xtra.sanitize_text(post.link_title)
+				word_wrap:    true
+				text_size:    text_size_small
+				line_spacing: -1
+				text_color:   app.txt_color_link
+				wrap_shrink:  models.v_scrollbar_width
+				on_click:     fn [post, mut app] () {
 					if !app.is_click_handled() {
 						app.set_click_handled()
 						os.open_uri(post.link_uri) or { ui.message_box(err.msg()) }
@@ -156,10 +162,11 @@ fn build_timeline_posts(timeline Timeline, mut app App) {
 		}
 
 		post_ui << widgets.link_label(
-			text:       post_counts(post)
-			text_size:  text_size_small
-			text_color: app.txt_color_dim
-			offset_y:   if post.image_path.len > 0 { 4 } else { 0 }
+			text:         post_counts(post)
+			text_size:    text_size_small
+			line_spacing: -1
+			text_color:   app.txt_color_dim
+			offset_y:     if post.image_path.len > 0 { 4 } else { 0 }
 		)
 
 		post_ui << widgets.h_line(

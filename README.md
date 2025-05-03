@@ -18,8 +18,8 @@ Reacting or replying to posts is not supported. Instead, click on the post title
 Install the V compiler from https://vlang.io
 ```
 git clone https://github.com/mike-ward/Kite
-cd kite
 v install ui
+cd kite/src
 v run .
 ```
 Kite relies on V's V-UI library, which is still in development.

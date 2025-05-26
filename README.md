@@ -19,7 +19,7 @@ Install the V compiler from https://vlang.io
 ```
 git clone https://github.com/mike-ward/Kite
 v install ui
-cd kite/src
+cd kite/kite
 v run .
 ```
 Kite relies on V's V-UI library, which is still in development.
